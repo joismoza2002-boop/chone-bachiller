@@ -88,10 +88,10 @@ def verificar_es_admin(email):
 # Autenticador leyendo de forma segura los secretos estructurados de Streamlit
 authenticator = Authenticate(
     client_id=st.secrets["client_id"],
-client_secret=st.secrets["client_secret"],
+    client_secret=st.secrets["client_secret"],
     cookie_name='chone_bachiller_cookie',
     cookie_key='chone_secret_key_2026',
-    redirect_uri='https://chone-bachiller-chcz6nwpmsejuezvxym9cz.streamlit.app/',
+    redirect_uri='https://n9cz.streamlit.app/',
     scope=['openid', 'https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/userinfo.profile']
 )
 
