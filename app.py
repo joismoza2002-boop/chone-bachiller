@@ -295,7 +295,7 @@ def render_top_navbar():
     st.markdown("<hr style='border-color: #cbd5e1; margin: 1rem 0 1.5rem 0;'>", unsafe_allow_html=True)
 
 def logout_user():
-    authenticator.logout('Cerrar sesión')
+    authenticator.logout('Cerrar sesión', 'main')
     st.session_state.logged_in = False
     st.session_state.user_email = ""
     st.session_state.profile_complete = False
@@ -488,4 +488,3 @@ else:
         render_results()
     elif st.session_state.current_view == "admin":
         render_admin()
-
