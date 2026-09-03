@@ -4,7 +4,7 @@ import pandas as pd
 import random
 from datetime import datetime
 
-# Configuración inicial de la página a pantalla completa
+# Configuración inicial de la página
 st.set_page_config(
     page_title="Chone Bachiller | Plataforma Educativa Oficial",
     page_icon="🎓",
@@ -12,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Inyección de CSS avanzado tipo SaaS Moderno con diseño de dos columnas simétricas
+# Inyección de CSS corporativo moderno
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
@@ -23,64 +23,10 @@ st.markdown("""
         background-color: #f8fafc;
     }
 
-    /* Ocultar elementos nativos de Streamlit para un look corporativo limpio */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
     .stApp { background-color: #f8fafc; }
-
-    /* Contenedor Principal en Dos Columnas */
-    .split-layout {
-        display: flex;
-        flex-direction: row;
-        min-height: 100vh;
-        width: 100%;
-    }
-
-    @media (max-width: 1024px) {
-        .split-layout {
-            flex-direction: column;
-        }
-    }
-
-    /* Panel Izquierdo Institucional (Estilo Brand Panel) */
-    .brand-panel {
-        background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%);
-        color: white;
-        padding: 4rem 3rem;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        flex: 1;
-    }
-
-    /* Panel Derecho de Interacción */
-    .login-panel {
-        background: #ffffff;
-        padding: 4rem 3rem;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        flex: 1;
-    }
-
-    .login-box {
-        width: 100%;
-        max-width: 420px;
-    }
-
-    /* Tarjetas de características y contenedores */
-    .feature-item {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        margin-bottom: 1rem;
-        background: rgba(255, 255, 255, 0.1);
-        padding: 0.85rem 1rem;
-        border-radius: 12px;
-        backdrop-filter: blur(5px);
-    }
 
     .dashboard-card {
         background: #ffffff;
@@ -97,7 +43,6 @@ st.markdown("""
         border-color: #3b82f6;
     }
 
-    /* Botones Profesionales */
     .stButton>button {
         width: 100%;
         background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
@@ -110,11 +55,10 @@ st.markdown("""
         transition: all 0.25s ease;
     }
     .stButton>button:hover {
-        background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+        background: linear-gradient(135deg, #1d4ed8 100%, #1e40af 100%);
         box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
     }
 
-    /* Campos de Entrada */
     .stTextInput>div>div>input, .stSelectbox>div>div>div {
         border-radius: 12px;
         border: 1.5px solid #cbd5e1;
@@ -122,14 +66,10 @@ st.markdown("""
         background-color: #f8fafc;
         font-size: 0.95rem;
     }
-    .stTextInput>div>div>input:focus {
-        border-color: #2563eb;
-        background-color: #ffffff;
-    }
     </style>
 """, unsafe_allow_html=True)
 
-# Inicialización segura de Base de Datos
+# Inicialización de Base de Datos
 def init_db():
     conn = sqlite3.connect("chone_bachiller.db", check_same_thread=False)
     cursor = conn.cursor()
@@ -210,54 +150,32 @@ if "current_view" not in st.session_state: st.session_state.current_view = "dash
 if "exam_data" not in st.session_state: st.session_state.exam_data = None
 
 def render_auth():
-    # Estructura de dos columnas idéntica al diseño de referencia profesional
-    col_brand, col_login = st.columns([1.1, 0.9], gap="medium")
+    col_brand, col_login = st.columns([1.1, 0.9], gap="large")
     
     with col_brand:
         st.markdown("""
-            <div style="background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%); color: white; padding: 4rem 3rem; border-radius: 20px; min-height: 85vh; display: flex; flex-direction: column; justify-content: space-between;">
+            <div style="background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%); color: white; padding: 3.5rem 3rem; border-radius: 20px; min-height: 82vh; display: flex; flex-direction: column; justify-content: space-between;">
                 <div>
                     <span style="background: rgba(255,255,255,0.15); padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">
                         Cantón Chone · Manabí
                     </span>
-                    <h1 style="font-size: 2.8rem; font-weight: 800; line-height: 1.2; margin-top: 1.5rem; margin-bottom: 1rem;">
+                    <h1 style="font-size: 2.6rem; font-weight: 800; line-height: 1.2; margin-top: 1.5rem; margin-bottom: 1rem; color: white;">
                         Prepárate para tu examen de admisión universitaria
                     </h1>
                     <p style="font-size: 1.05rem; color: rgba(255,255,255,0.85); line-height: 1.5;">
                         Practica con simuladores reales, mide tu tiempo y descubre en qué debes mejorar antes del día decisivo.
                     </p>
-                    
-                    <div style="margin-top: 2.5rem; display: flex; flex-direction: column; gap: 1rem;">
-                        <div style="display: flex; align-items: center; gap: 1rem; background: rgba(255,255,255,0.1); padding: 0.85rem 1rem; border-radius: 12px;">
-                            <span style="background: rgba(255,255,255,0.2); width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-weight: bold;">📋</span>
-                            <span style="font-size: 0.95rem; font-weight: 500;">9 materias con banco de reactivos aleatorio</span>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 1rem; background: rgba(255,255,255,0.1); padding: 0.85rem 1rem; border-radius: 12px;">
-                            <span style="background: rgba(255,255,255,0.2); width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-weight: bold;">⏱️</span>
-                            <span style="font-size: 0.95rem; font-weight: 500;">Simulacros cronometrados de alto rendimiento</span>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 1rem; background: rgba(255,255,255,0.1); padding: 0.85rem 1rem; border-radius: 12px;">
-                            <span style="background: rgba(255,255,255,0.2); width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-weight: bold;">📖</span>
-                            <span style="font-size: 0.95rem; font-weight: 500;">Retroalimentación detallada por pregunta</span>
-                        </div>
-                    </div>
                 </div>
                 <p style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 2rem;">
-                    Plataforma educativa comunitaria de acceso libre · Chone Bachiller
+                    Plataforma educativa comunitaria · Chone Bachiller
                 </p>
             </div>
         """, unsafe_allow_html=True)
         
     with col_login:
-        st.markdown("<div style='height: 3rem;'></div>", unsafe_allow_html=True)
-        st.markdown("""
-            <div style="padding: 0 1rem;">
-                <h2 style="font-size: 1.8rem; font-weight: 800; color: #0f172a; margin-bottom: 0.5rem;">Inicia sesión</h2>
-                <p style="font-size: 0.95rem; color: #64748b; margin-bottom: 2rem;">
-                    Usa tu cuenta de Google o correo personal para ingresar. Solo necesitas hacerlo una vez.
-                </p>
-            </div>
-        """, unsafe_allow_html=True)
+        st.markdown("<div style='height: 2.5rem;'></div>", unsafe_allow_html=True)
+        st.markdown("## Inicia sesión")
+        st.markdown("Usa tu correo personal para ingresar. Solo necesitas hacerlo una vez.")
         
         with st.form("login_form"):
             email_input = st.text_input("Correo electrónico personal", placeholder="tucorreo@gmail.com")
@@ -273,23 +191,15 @@ def render_auth():
                 else:
                     st.error("Introduce un correo electrónico válido.")
 
-        # Cuenta rápida para demostración o acceso del coordinador
         if st.button("🔑 Acceso rápido Coordinación (Admin)"):
             st.session_state.user_email = "admin@chonebachiller.edu"
             st.session_state.logged_in = True
             st.session_state.profile_complete = True
             st.rerun()
 
-        st.markdown("""
-            <div style="margin-top: 2rem; display: flex; align-items: flex-start; gap: 0.75rem; background: #f1f5f9; padding: 1rem; border-radius: 12px; font-size: 0.85rem; color: #64748b;">
-                <span style="font-size: 1.1rem;">🛡️</span>
-                <p style="margin: 0;">Al continuar aceptas completar tu perfil académico. La cuenta con privilegios administrativos abre el panel de control de demostración.</p>
-            </div>
-        """, unsafe_allow_html=True)
-
 def render_profile_form():
-    st.markdown('<h1 style="font-size: 2rem; font-weight: 800; color: #0f172a; margin-bottom: 0.5rem;">Registro de Perfil Académico</h1>', unsafe_allow_html=True)
-    st.markdown('<p style="color: #64748b; margin-bottom: 2rem;">Completa tus credenciales institucionales para habilitar el historial de simulacros.</p>', unsafe_allow_html=True)
+    st.markdown("## Registro de Perfil Académico")
+    st.markdown("Completa tus credenciales institucionales para habilitar el historial de simulacros.")
     
     with st.form("profile_form"):
         nombres = st.text_input("Nombres y Apellidos Completos:")
@@ -315,8 +225,8 @@ def render_profile_form():
                 st.error("Por favor, completa los campos obligatorios principales.")
 
 def render_dashboard():
-    st.markdown('<h1 style="font-size: 2.2rem; font-weight: 800; color: #0f172a; margin-bottom: 0px;">Panel Académico 📚</h1>', unsafe_allow_html=True)
-    st.markdown(f'<p style="color: #64748b; margin-bottom: 2rem;">Sesión activa: <b>{st.session_state.user_email}</b>. Selecciona una materia para iniciar el simulacro oficial.</p>', unsafe_allow_html=True)
+    st.markdown("## Panel Académico 📚")
+    st.markdown(f"Sesión activa: **{st.session_state.user_email}**. Selecciona una materia para iniciar el simulacro oficial.")
     
     materias = [
         "Razonamiento Numérico", "Razonamiento Verbal", "Razonamiento Abstracto",
@@ -362,13 +272,14 @@ def render_exam():
     q = questions[idx]
     q_id, _, q_text, op_a, op_b, op_c, op_d, _, _ = q
     
-    st.markdown(f'<h1 style="font-size: 1.8rem; font-weight: 800; color: #0f172a;">Simulador: {exam["materia"]}</h1>', unsafe_allow_html=True)
+    st.markdown(f"## Simulador: {exam['materia']}")
     st.progress((idx + 1) / len(questions))
     st.markdown(f"**Reactivo {idx + 1} de {len(questions)}**")
     
     st.markdown(f"""
         <div class="dashboard-card" style="margin-top: 1rem;">
             <h3 style="font-size: 1.1rem; font-weight: 700; color: #0f172a; margin-bottom: 1rem;">{q_text}</h3>
+        </div>
     """, unsafe_allow_html=True)
     
     options_list = [f"A) {op_a}", f"B) {op_b}", f"C) {op_c}", f"D) {op_d}"]
@@ -377,7 +288,6 @@ def render_exam():
     
     chosen = st.radio("Selecciona tu respuesta:", options_list, index=default_idx, key=f"radio_{q_id}")
     exam["answers"][q_id] = chosen.split(")")[0]
-    st.markdown("</div>", unsafe_allow_html=True)
     
     col_prev, col_next, col_fin = st.columns(3)
     with col_prev:
@@ -415,8 +325,7 @@ def render_results():
     score = sum(1 for q in questions if answers.get(q[0]) == q[7])
     total = len(questions)
     
-    st.markdown('<h1 style="font-size: 2rem; font-weight: 800; color: #0f172a;">Resultados Oficiales 📊</h1>', unsafe_allow_html=True)
-    
+    st.markdown("## Resultados Oficiales 📊")
     col1, col2 = st.columns(2)
     with col1: st.metric(label="Puntaje Obtenido", value=f"{score} / {total}")
     with col2: st.metric(label="Porcentaje de Éxito", value=f"{(score/total)*100:.1f}%")
@@ -439,7 +348,7 @@ def render_results():
         st.rerun()
 
 def render_admin():
-    st.markdown('<h1 style="font-size: 2rem; font-weight: 800; color: #0f172a;">Panel Administrativo 🛠️</h1>', unsafe_allow_html=True)
+    st.markdown("## Panel Administrativo 🛠️")
     tab1, tab2 = st.tabs(["Base de Estudiantes", "Gestión de Banco de Preguntas"])
     
     with tab1:
@@ -468,7 +377,6 @@ def render_admin():
         st.session_state.current_view = "dashboard"
         st.rerun()
 
-# Enrutador principal de pantallas
 if not st.session_state.logged_in:
     render_auth()
 elif not st.session_state.profile_complete:
