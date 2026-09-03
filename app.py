@@ -57,33 +57,20 @@ st.markdown("""
         box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
     }
 
-    /* Contenedor Grid estricto para tarjetas 100% simétricas e idénticas */
-    .materias-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 1.5rem;
-        margin-top: 1.5rem;
-        margin-bottom: 2rem;
-    }
-    @media (max-width: 1024px) {
-        .materias-grid { grid-template-columns: repeat(2, 1fr); }
-    }
-    @media (max-width: 640px) {
-        .materias-grid { grid-template-columns: 1fr; }
-    }
-
+    /* Tarjetas de materias simétricas */
     .dashboard-card {
         background: #ffffff;
         padding: 1.5rem;
         border-radius: 16px;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
         border: 1px solid #e2e8f0;
-        height: 220px;
+        height: 200px;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        transition: all 0.25s ease;
+        margin-bottom: 1rem;
         box-sizing: border-box;
+        transition: all 0.25s ease;
     }
     .dashboard-card:hover {
         transform: translateY(-4px);
@@ -361,28 +348,21 @@ def render_dashboard():
         "Biología", "Química", "Física", "Matemáticas", "Lengua y Literatura", "Historia"
     ]
     
-    # Generación estricta de tarjetas simétricas mediante Grid CSS
-    grid_html = "<div class='materias-grid'>"
-    for idx, materia in enumerate(materias):
-        grid_html += f"""
-            <div class='dashboard-card'>
-                <div>
-                    <h3 style='font-size: 1.05rem; font-weight: 700; color: #1e3a8a; margin-bottom: 8px;'>{materia}</h3>
-                    <p style='color: #64748b; font-size: 0.85rem; line-height: 1.4; margin-bottom: 0;'>Simulador oficial con 30 reactivos estandarizados y retroalimentación teórica.</p>
-                </div>
-            </div>
-        """
-    grid_html += "</div>"
-    st.markdown(grid_html, unsafe_allow_html=True)
-    
-    # Botones de inicio colocados de forma simétrica debajo de cada columna visual
-    st.markdown("### Selecciona el examen a rendir:")
+    # Renderizado simétrico usando columnas nativas de Streamlit
     for i in range(0, len(materias), 3):
         cols = st.columns(3, gap="medium")
         for j in range(3):
             if i + j < len(materias):
                 materia = materias[i + j]
                 with cols[j]:
+                    st.markdown(f"""
+                        <div class='dashboard-card'>
+                            <div>
+                                <h3 style='font-size: 1.05rem; font-weight: 700; color: #1e3a8a; margin-bottom: 8px;'>{materia}</h3>
+                                <p style='color: #64748b; font-size: 0.85rem; line-height: 1.4; margin-bottom: 0;'>Simulador oficial con 30 reactivos estandarizados y retroalimentación teórica.</p>
+                            </div>
+                        </div>
+                    """, unsafe_allow_html=True)
                     if st.button(f"Iniciar {materia}", key=f"btn_mat_{i+j}", use_container_width=True):
                         start_exam(materia)
 
@@ -540,7 +520,6 @@ def render_admin():
         st.session_state.current_view = "dashboard"
         st.rerun()
 
-# Control de flujo garantizando que la barra lateral aparezca siempre tras la autenticación
 if not st.session_state.logged_in:
     render_auth()
 elif not st.session_state.profile_complete:
@@ -557,4 +536,3 @@ else:
         render_results()
     elif st.session_state.current_view == "admin":
         render_admin()
-
