@@ -87,13 +87,14 @@ def verificar_es_admin(email):
 
 # Autenticador leyendo de forma segura los secretos estructurados de Streamlit
 authenticator = Authenticate(
-    client_id=st.secrets["client_id"],
-    client_secret=st.secrets["client_secret"],
+    client_id=st.secrets.get("client_id", "951212601524-vpb90d6qup3471qm36k74eqprpcdvku.apps.googleusercontent.com"),
+    client_secret=st.secrets.get("client_secret", "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"),
     cookie_name='chone_bachiller_cookie',
     cookie_key='chone_secret_key_2026',
     redirect_uri='https://n9cz.streamlit.app/',
     scope=['openid', 'https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/userinfo.profile']
 )
+
 
 def init_db():
     conn = sqlite3.connect("chone_bachiller.db", check_same_thread=False)
