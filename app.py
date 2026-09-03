@@ -144,7 +144,7 @@ def seed_questions(cursor, conn):
         "Biología", "Química", "Física", "Matemáticas", "Lengua y Literatura", "Historia"
     ]
     for mat in materias:
-        for i in range(1, 31): # 30 preguntas por materia para cumplir con el estándar
+        for i in range(1, 31):
             cursor.execute("""
                 INSERT INTO questions (materia, pregunta, opcion_a, opcion_b, opcion_c, opcion_d, correcta, explicacion)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -337,7 +337,7 @@ def render_dashboard():
 def start_exam(materia):
     cursor.execute("SELECT id, materia, pregunta, opcion_a, opcion_b, opcion_c, opcion_d, correcta, explicacion FROM questions WHERE materia = ?", (materia,))
     rows = cursor.fetchall()
-    selected = random.sample(rows, min(30, len(rows))) # Exactamente 30 preguntas
+    selected = random.sample(rows, min(30, len(rows)))
     
     st.session_state.exam_data = {
         "materia": materia,
@@ -405,4 +405,98 @@ def render_exam():
         total_q = len(questions)
         if answered_count == total_q:
             if st.button("Finalizar y Enviar 🏁", type="primary"):
-                finish_exam(auto_submitted=Fals
+                finish_exam(auto_submitted=False)
+        else:
+            st.markdown(f"<p style='color: #64748b; font-size: 0.8rem; text-align: center; margin-top: 10px;'>Faltan {total_q - answered_count} por responder</p>", unsafe_allow_html=True)
+
+def finish_exam(auto_submitted=False):
+    exam = st.session_state.exam_data
+    questions = exam["questions"]
+    answers = exam["answers"]
+    score = sum(1 for q in questions if answers.get(q[0]) == q[7])
+    total = len(questions)
+    
+    cursor.execute("""
+        INSERT INTO results (email, materia, puntaje, total, fecha)
+        VALUES (?, ?, ?, ?, ?)
+    """, (st.session_state.user_email, exam["materia"], score, total, datetime.now()))
+    conn.commit()
+    
+    st.session_state.current_view = "results"
+    st.rerun()
+
+def render_results():
+    exam = st.session_state.exam_data
+    questions = exam["questions"]
+    answers = exam["answers"]
+    score = sum(1 for q in questions if answers.get(q[0]) == q[7])
+    total = len(questions)
+    
+    st.markdown("## Resultados Oficiales 📊")
+    col1, col2 = st.columns(2)
+    with col1: st.metric(label="Puntaje Obtenido", value=f"{score} / {total}")
+    with col2: st.metric(label="Porcentaje de Éxito", value=f"{(score/total)*100:.1f}%")
+    
+    st.markdown("<br><h3>Revisión Detallada de Reactivos</h3>", unsafe_allow_html=True)
+    for idx, q in enumerate(questions):
+        q_id, _, q_text, op_a, op_b, op_c, op_d, correcta, explicacion = q
+        user_ans = answers.get(q_id, "No respondida")
+        is_correct = (user_ans == correcta)
+        status = "✅ Correcta" if is_correct else "❌ Incorrecta"
+        
+        with st.expander(f"Reactivo {idx + 1} — {status}"):
+            st.write(f"**Enunciado:** {q_text}")
+            st.write(f"Tu respuesta: **{user_ans}** | Correcta: **{correcta}**")
+            st.info(f"**Explicación teórica:** {explicacion}")
+            
+    if st.button("Volver al Panel Principal 🏠", type="primary"):
+        st.session_state.current_view = "dashboard"
+        st.session_state.exam_data = None
+        st.rerun()
+
+def render_admin():
+    st.markdown("## Panel Administrativo 🛠️")
+    tab1, tab2 = st.tabs(["Base de Estudiantes", "Gestión de Banco de Preguntas"])
+    
+    with tab1:
+        df_users = pd.read_sql_query("SELECT * FROM users", conn)
+        st.dataframe(df_users, use_container_width=True)
+        if not df_users.empty:
+            st.download_button("Descargar CSV de Estudiantes 📥", data=df_users.to_csv(index=False).encode('utf-8'), file_name="estudiantes.csv", mime="text/csv")
+            
+    with tab2:
+        with st.form("add_q"):
+            materia = st.selectbox("Materia:", ["Razonamiento Numérico", "Razonamiento Verbal", "Razonamiento Abstracto", "Biología", "Química", "Física", "Matemáticas", "Lengua y Literatura", "Historia"])
+            pregunta = st.text_area("Enunciado:")
+            op_a, op_b, op_c, op_d = st.text_input("A:"), st.text_input("B:"), st.text_input("C:"), st.text_input("D:")
+            correcta = st.selectbox("Correcta:", ["A", "B", "C", "D"])
+            explicacion = st.text_area("Explicación:")
+            if st.form_submit_button("Guardar Pregunta"):
+                if pregunta and op_a:
+                    cursor.execute("INSERT INTO questions (materia, pregunta, opcion_a, opcion_b, opcion_c, opcion_d, correcta, explicacion) VALUES (?,?,?,?,?,?,?,?)",
+                                   (materia, pregunta, op_a, op_b, op_c, op_d, correcta, explicacion))
+                    conn.commit()
+                    st.success("Pregunta agregada con éxito.")
+                else:
+                    st.error("Completa los campos obligatorios.")
+                    
+    if st.button("⬅️ Volver al Dashboard"):
+        st.session_state.current_view = "dashboard"
+        st.rerun()
+
+if not st.session_state.logged_in:
+    render_auth()
+elif not st.session_state.profile_complete:
+    render_profile_form()
+else:
+    render_sidebar()
+    if st.session_state.current_view == "dashboard":
+        render_dashboard()
+    elif st.session_state.current_view == "profile_edit":
+        render_profile_edit()
+    elif st.session_state.current_view == "exam":
+        render_exam()
+    elif st.session_state.current_view == "results":
+        render_results()
+    elif st.session_state.current_view == "admin":
+        render_admin()
