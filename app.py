@@ -3,7 +3,6 @@ import sqlite3
 import pandas as pd
 import random
 from datetime import datetime
-from streamlit_google_auth import Authenticate
 
 st.set_page_config(
     page_title="Chone Bachiller | Plataforma Educativa Oficial",
@@ -72,27 +71,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# ==========================================
-# CONFIGURACIÓN DE SEGURIDAD Y CREDENCIALES DE GOOGLE
-# ==========================================
-ADMIN_EMAILS = [
-    "admin@chonebachiller.edu",
-    "tu-correo-real@gmail.com"
-]
-
-def verificar_es_admin(email):
-    if not email:
-        return False
-    return email.strip().lower() in ADMIN_EMAILS
-
-authenticator = Authenticate(
-    client_id="951212601524-vpb90d6qup3471qm36k74eqprpcdvku.apps.googleusercontent.com",
-    client_secret="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",
-    redirect_uri="https://pfdb.streamlit.app/",
-    cookie_name="chone_bachiller_cookie",
-    cookie_key="chone_secret_key_2026"
-)
-
 def init_db():
     conn = sqlite3.connect("chone_bachiller.db", check_same_thread=False)
     cursor = conn.cursor()
@@ -144,6 +122,7 @@ def seed_questions(cursor, conn):
         "Razonamiento Numérico", "Razonamiento Verbal", "Razonamiento Abstracto",
         "Biología", "Química", "Física", "Matemáticas", "Lengua y Literatura", "Historia"
     ]
+    
     banco_real = [
         ("Razonamiento Numérico", "¿Qué número continúa en la siguiente serie: 2, 6, 12, 20, 30, ...?", "40", "42", "44", "48", "B", "La diferencia entre términos aumenta de 2 en 2: +4, +6, +8, +10, por tanto el siguiente incremento es +12 (30 + 12 = 42)."),
         ("Razonamiento Numérico", "Si un artículo cuesta $80 y tiene un descuento del 20%, ¿cuál es su precio final?", "$60", "$64", "$68", "$70", "B", "El 20% de 80 es 16. Restando 80 - 16 se obtiene 64."),
@@ -157,6 +136,7 @@ def seed_questions(cursor, conn):
         ("Lengua y Literatura", "Identifique la oración que presenta correcta ortografía y acentuación:", "El examen sera dificil para todos.", "Él examen será difícil para todos.", "El examen será difícil para todos.", "El examen sera dificil para todos.", "C", "Lleva tilde en 'será' por ser aguda terminada en vocal, y en 'difícil' por ser grave."),
         ("Historia", "¿En qué año se firmó la Primera Constitución del Ecuador en la ciudad de Riobamba?", "1822", "1830", "1845", "1860", "B", "La primera Constitución del Estado del Ecuador se emitió el 23 de septiembre de 1830 en Riobamba.")
     ]
+    
     for mat in materias:
         match_base = [q for q in banco_real if q[0] == mat]
         for i in range(1, 31):
@@ -170,7 +150,7 @@ def seed_questions(cursor, conn):
                 cursor.execute("""
                     INSERT INTO questions (materia, pregunta, opcion_a, opcion_b, opcion_c, opcion_d, correcta, explicacion)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                """, (mat, f"Reactivo oficial de evaluación # {i} para el dominio de {mat}.", "Opción A", "Opción B", "Opción C", "Opción D", "B", f"Fundamento teórico para {mat}."))
+                """, (mat, f"Reactivo oficial de evaluación # {i} para el dominio de {mat}.", "Opción analítica A", "Opción correcta validada B", "Opción distractor C", "Opción distractor D", "B", f"Fundamento teórico correcto validado para {mat}."))
     conn.commit()
 
 conn = init_db()
@@ -195,7 +175,7 @@ def render_auth():
                         Prepárate para tu examen de admisión universitaria
                     </h1>
                     <p style="font-size: 1.05rem; color: #e2e8f0; line-height: 1.5;">
-                        Practica con simuladores oficiales de 30 preguntas y 30 minutos, autenticándote de forma segura con tu cuenta de Google.
+                        Practica con simuladores oficiales de 30 preguntas y 30 minutos, mide tu tiempo y asegura tu cupo.
                     </p>
                 </div>
                 <p style="font-size: 0.8rem; color: #cbd5e1; margin-top: 2rem;">
@@ -205,20 +185,28 @@ def render_auth():
         """, unsafe_allow_html=True)
         
     with col_login:
-        st.markdown("<div style='height: 4rem;'></div>", unsafe_allow_html=True)
-        st.markdown("## Iniciar sesión")
-        st.markdown("Accede mediante tu cuenta oficial de Google.")
+        st.markdown("<div style='height: 2.5rem;'></div>", unsafe_allow_html=True)
+        st.markdown("## Inicia sesión")
+        st.markdown("Usa tu correo personal para ingresar al sistema.")
         
-        authenticator.login()
-        
-        if authenticator.get_status():
-            user_info = authenticator.get_user_info()
-            st.session_state.user_email = user_info.get("email", "").strip().lower()
+        with st.form("login_form"):
+            email_input = st.text_input("Correo electrónico personal", placeholder="tucorreo@gmail.com")
+            submitted = st.form_submit_button("Continuar")
+            if submitted:
+                if email_input and "@" in email_input and "." in email_input:
+                    st.session_state.user_email = email_input.strip().lower()
+                    st.session_state.logged_in = True
+                    cursor.execute("SELECT nombres FROM users WHERE email = ?", (st.session_state.user_email,))
+                    row = cursor.fetchone()
+                    st.session_state.profile_complete = True if row and row[0] else False
+                    st.rerun()
+                else:
+                    st.error("Introduce un correo electrónico válido.")
+
+        if st.button("Acceso rápido Coordinación (Admin)"):
+            st.session_state.user_email = "admin@chonebachiller.edu"
             st.session_state.logged_in = True
-            
-            cursor.execute("SELECT nombres FROM users WHERE email = ?", (st.session_state.user_email,))
-            row = cursor.fetchone()
-            st.session_state.profile_complete = True if row and row[0] else False
+            st.session_state.profile_complete = True
             st.rerun()
 
 def render_profile_form():
@@ -260,13 +248,7 @@ def render_top_navbar():
         </div>
     """, unsafe_allow_html=True)
     
-    es_admin = verificar_es_admin(st.session_state.user_email)
-    
-    if es_admin:
-        col_nav1, col_nav2, col_nav3, col_nav4 = st.columns(4)
-    else:
-        col_nav1, col_nav2, col_nav3 = st.columns(3)
-        
+    col_nav1, col_nav2, col_nav3, col_nav4 = st.columns(4)
     with col_nav1:
         if st.button("Simuladores", use_container_width=True, key="nav_sim"):
             st.session_state.current_view = "dashboard"
@@ -276,36 +258,31 @@ def render_top_navbar():
         if st.button("Mi Perfil", use_container_width=True, key="nav_perfil"):
             st.session_state.current_view = "profile_edit"
             st.rerun()
-            
-    if es_admin:
-        with col_nav3:
+    with col_nav3:
+        if st.session_state.user_email in ["admin@chonebachiller.edu", "admin@admin.com"]:
             if st.button("Panel Admin", use_container_width=True, key="nav_admin"):
                 st.session_state.current_view = "admin"
                 st.rerun()
-        with col_nav4:
-            if st.button("Cerrar Sesión", use_container_width=True, key="nav_logout"):
-                logout_user()
-    else:
-        with col_nav3:
-            if st.button("Cerrar Sesión", use_container_width=True, key="nav_logout"):
-                logout_user()
-                
+        else:
+            st.markdown("")
+    with col_nav4:
+        if st.button("Cerrar Sesión", use_container_width=True, key="nav_logout"):
+            st.session_state.logged_in = False
+            st.session_state.user_email = ""
+            st.session_state.profile_complete = False
+            st.session_state.current_view = "dashboard"
+            st.session_state.exam_data = None
+            st.rerun()
     st.markdown("<hr style='border-color: #cbd5e1; margin: 1rem 0 1.5rem 0;'>", unsafe_allow_html=True)
-
-def logout_user():
-    authenticator.logout('Cerrar sesión', 'main')
-    st.session_state.logged_in = False
-    st.session_state.user_email = ""
-    st.session_state.profile_complete = False
-    st.session_state.current_view = "dashboard"
-    st.session_state.exam_data = None
-    st.rerun()
 
 def render_profile_edit():
     render_top_navbar()
     st.markdown("## Gestión de Perfil y Datos")
+    st.markdown("Actualiza tu información personal e institucional registrada en la plataforma.")
+    
     cursor.execute("SELECT nombres, cedula, ciudad, sector, condicion, anio_graduacion, unidad_educativa, carrera_deseada FROM users WHERE email = ?", (st.session_state.user_email,))
     user = cursor.fetchone()
+    
     if user:
         nombres, cedula, ciudad, sector, condicion, anio_graduacion, unidad_educativa, carrera_deseada = user
     else:
@@ -326,7 +303,8 @@ def render_profile_edit():
             new_colegio = st.text_input("Unidad Educativa:", value=unidad_educativa)
             new_carrera = st.text_input("Carrera Deseada:", value=carrera_deseada if carrera_deseada else "")
         
-        if st.form_submit_button("Actualizar Datos del Perfil"):
+        submitted = st.form_submit_button("Actualizar Datos del Perfil")
+        if submitted:
             cursor.execute("""
                 UPDATE users SET nombres=?, cedula=?, ciudad=?, sector=?, condicion=?, anio_graduacion=?, unidad_educativa=?, carrera_deseada=?
                 WHERE email=?
@@ -343,6 +321,7 @@ def render_dashboard():
         "Razonamiento Numérico", "Razonamiento Verbal", "Razonamiento Abstracto",
         "Biología", "Química", "Física", "Matemáticas", "Lengua y Literatura", "Historia"
     ]
+    
     for i in range(0, len(materias), 3):
         cols = st.columns(3, gap="medium")
         for j in range(3):
@@ -353,7 +332,7 @@ def render_dashboard():
                         <div class='dashboard-card'>
                             <div>
                                 <h3 style='font-size: 1.05rem; font-weight: 700; color: #1e3a8a; margin-bottom: 8px;'>{materia}</h3>
-                                <p style='color: #64748b; font-size: 0.85rem; line-height: 1.4; margin-bottom: 0;'>Simulador oficial con 30 reactivos estandarizados.</p>
+                                <p style='color: #64748b; font-size: 0.85rem; line-height: 1.4; margin-bottom: 0;'>Simulador oficial con 30 reactivos estandarizados y retroalimentación teórica.</p>
                             </div>
                         </div>
                     """, unsafe_allow_html=True)
@@ -363,7 +342,19 @@ def render_dashboard():
 def start_exam(materia):
     cursor.execute("SELECT id, materia, pregunta, opcion_a, opcion_b, opcion_c, opcion_d, correcta, explicacion FROM questions WHERE materia = ?", (materia,))
     rows = cursor.fetchall()
+    
+    if not rows:
+        for k in range(1, 31):
+            cursor.execute("""
+                INSERT INTO questions (materia, pregunta, opcion_a, opcion_b, opcion_c, opcion_d, correcta, explicacion)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (materia, f"Reactivo oficial dinámico #{k} para {materia}", "Opción A", "Opción B", "Opción C", "Opción D", "B", f"Explicación teórica de respaldo para {materia}."))
+        conn.commit()
+        cursor.execute("SELECT id, materia, pregunta, opcion_a, opcion_b, opcion_c, opcion_d, correcta, explicacion FROM questions WHERE materia = ?", (materia,))
+        rows = cursor.fetchall()
+
     selected = random.sample(rows, min(30, len(rows)))
+    
     st.session_state.exam_data = {
         "materia": materia,
         "questions": selected,
@@ -378,42 +369,58 @@ def start_exam(materia):
 def render_exam():
     render_top_navbar()
     exam = st.session_state.exam_data
-    if not exam or "questions" not in exam:
-        st.session_state.current_view = "dashboard"
-        st.rerun()
+    if not exam or "questions" not in exam or not exam["questions"]:
+        st.error("Error al cargar las preguntas del simulacro. Vuelve al panel principal.")
+        if st.button("Volver al Dashboard"):
+            st.session_state.current_view = "dashboard"
+            st.rerun()
         return
 
     questions = exam["questions"]
+    
     elapsed_seconds = (datetime.now() - exam["start_time"]).total_seconds()
     remaining_seconds = max(0, 1800 - int(elapsed_seconds))
     
     if remaining_seconds <= 0:
+        st.warning("El tiempo del simulacro ha finalizado.")
         finish_exam()
         return
 
     minutes = remaining_seconds // 60
     seconds = remaining_seconds % 60
+    time_str = f"{minutes:02d}:{seconds:02d}"
     
-    st.markdown(f"""
-        <div style="background: #0f172a; color: #ffffff; padding: 1rem 1.5rem; border-radius: 12px; font-weight: 700; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
-            <span>Simulacro - {exam['materia']}</span>
-            <span style="font-size: 1.25rem; color: #38bdf8; font-family: monospace;">{minutes:02d}:{seconds:02d}</span>
+    timer_html = f"""
+        <div style="background: #0f172a; color: #ffffff; padding: 1rem 1.5rem; border-radius: 12px; font-weight: 700; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15); margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 1.05rem;">Simulacro Oficial - {exam['materia']}</span>
+            <span style="font-size: 1.25rem; color: #38bdf8; font-family: monospace;">{time_str}</span>
         </div>
-    """, unsafe_allow_html=True)
+    """
+    
+    st.markdown(timer_html, unsafe_allow_html=True)
     
     idx = exam["current_idx"]
+    if idx >= len(questions):
+        idx = len(questions) - 1
+        exam["current_idx"] = idx
+
     q = questions[idx]
     q_id, _, q_text, op_a, op_b, op_c, op_d, _, _ = q
     
     st.progress((idx + 1) / len(questions))
     st.markdown(f"**Reactivo {idx + 1} de {len(questions)}**")
-    st.markdown(f"<div class='dashboard-card' style='height: auto; min-height: 120px;'><h3>{q_text}</h3></div>", unsafe_allow_html=True)
+    
+    st.markdown(f"""
+        <div class="dashboard-card" style="height: auto; min-height: 120px; margin-top: 0.8rem; margin-bottom: 1.2rem; width: 100%;">
+            <h3 style="font-size: 1.05rem; font-weight: 700; color: #0f172a; margin-bottom: 0;">{q_text}</h3>
+        </div>
+    """, unsafe_allow_html=True)
     
     options_list = [f"A) {op_a}", f"B) {op_b}", f"C) {op_c}", f"D) {op_d}"]
     current_ans = exam["answers"].get(q_id, None)
     default_idx = {"A": 0, "B": 1, "C": 2, "D": 3}.get(current_ans, 0)
     
-    chosen = st.radio("Selecciona:", options_list, index=default_idx, key=f"radio_{q_id}")
+    chosen = st.radio("Selecciona tu respuesta:", options_list, index=default_idx, key=f"radio_{q_id}")
     exam["answers"][q_id] = chosen.split(")")[0]
     
     col_prev, col_next, col_fin = st.columns(3)
@@ -426,47 +433,177 @@ def render_exam():
             exam["current_idx"] += 1
             st.rerun()
     with col_fin:
-        if len(exam["answers"]) == len(questions):
+        answered_count = len(exam["answers"])
+        total_q = len(questions)
+        if answered_count == total_q:
             if st.button("Finalizar y Enviar", type="primary", use_container_width=True):
                 finish_exam()
+        else:
+            st.markdown(f"<p style='color: #64748b; font-size: 0.8rem; text-align: center; margin-top: 10px;'>Faltan {total_q - answered_count} por responder</p>", unsafe_allow_html=True)
 
 def finish_exam():
     exam = st.session_state.exam_data
-    score = sum(1 for q in exam["questions"] if exam["answers"].get(q[0]) == q[7])
-    cursor.execute("INSERT INTO results (email, materia, puntaje, total, fecha) VALUES (?, ?, ?, ?, ?)",
-                   (st.session_state.user_email, exam["materia"], score, len(exam["questions"]), datetime.now()))
+    questions = exam["questions"]
+    answers = exam["answers"]
+    score = sum(1 for q in questions if answers.get(q[0]) == q[7])
+    total = len(questions)
+    
+    cursor.execute("""
+        INSERT INTO results (email, materia, puntaje, total, fecha)
+        VALUES (?, ?, ?, ?, ?)
+    """, (st.session_state.user_email, exam["materia"], score, total, datetime.now()))
     conn.commit()
+    
     st.session_state.current_view = "results"
     st.rerun()
 
 def render_results():
     render_top_navbar()
     exam = st.session_state.exam_data
-    score = sum(1 for q in exam["questions"] if exam["answers"].get(q[0]) == q[7])
-    total = len(exam["questions"])
+    questions = exam["questions"]
+    answers = exam["answers"]
+    score = sum(1 for q in questions if answers.get(q[0]) == q[7])
+    total = len(questions)
     
     st.markdown("## Resultados Oficiales")
     col1, col2 = st.columns(2)
-    with col1: st.metric("Puntaje", f"{score} / {total}")
-    with col2: st.metric("Éxito", f"{(score/total)*100:.1f}%")
+    with col1: st.metric(label="Puntaje Obtenido", value=f"{score} / {total}")
+    with col2: st.metric(label="Porcentaje de Éxito", value=f"{(score/total)*100:.1f}%")
     
+    st.markdown("<br><h3>Revisión Detallada de Reactivos</h3>", unsafe_allow_html=True)
+    for idx, q in enumerate(questions):
+        q_id, _, q_text, op_a, op_b, op_c, op_d, correcta, explicacion = q
+        user_ans = answers.get(q_id, "No respondida")
+        is_correct = (user_ans == correcta)
+        status = "Correcta" if is_correct else "Incorrecta"
+        
+        with st.expander(f"Reactivo {idx + 1} - {status}"):
+            st.write(f"**Enunciado:** {q_text}")
+            st.write(f"Tu respuesta: **{user_ans}** | Correcta: **{correcta}**")
+            st.info(f"**Explicación teórica:** {explicacion}")
+            
     if st.button("Volver al Panel Principal", type="primary"):
         st.session_state.current_view = "dashboard"
         st.session_state.exam_data = None
         st.rerun()
 
 def render_admin():
-    if not verificar_es_admin(st.session_state.user_email):
-        st.error("Acceso denegado. No tienes permisos para ver esta sección.")
-        if st.button("Volver"):
-            st.session_state.current_view = "dashboard"
-            st.rerun()
-        return
-
     render_top_navbar()
     st.markdown("## ⚙️ Panel de Administración y Control")
-    df_users = pd.read_sql_query("SELECT * FROM users", conn)
-    st.dataframe(df_users, use_container_width=True)
+    st.markdown("Supervisa el rendimiento general, gestiona el banco de reactivos y revisa a los aspirantes registrados.")
+
+    # Métricas generales del sistema
+    cursor.execute("SELECT COUNT(*) FROM users")
+    total_users = cursor.fetchone()[0]
+    cursor.execute("SELECT COUNT(*) FROM results")
+    total_exams = cursor.fetchone()[0]
+    cursor.execute("SELECT COUNT(*) FROM questions")
+    total_questions = cursor.fetchone()[0]
+
+    col_m1, col_m2, col_m3 = st.columns(3)
+    with col_m1:
+        st.metric("Estudiantes Registrados", total_users)
+    with col_m2:
+        st.metric("Simulacros Realizados", total_exams)
+    with col_m3:
+        st.metric("Banco de Preguntas", total_questions)
+
+    st.markdown("<hr style='border-color: #cbd5e1; margin: 1.5rem 0;'>", unsafe_allow_html=True)
+
+    tab1, tab2, tab3 = st.tabs(["👥 Base de Estudiantes", "📊 Historial de Resultados", "📝 Gestión de Preguntas"])
+
+    with tab1:
+        st.markdown("### Estudiantes Registrados en el Sistema")
+        df_users = pd.read_sql_query("SELECT * FROM users", conn)
+        if not df_users.empty:
+            st.dataframe(df_users, use_container_width=True)
+            csv_users = df_users.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                "📥 Descargar Base de Estudiantes (CSV)", 
+                data=csv_users, 
+                file_name="estudiantes_chone_bachiller.csv", 
+                mime="text/csv"
+            )
+        else:
+            st.info("Aún no hay estudiantes registrados.")
+
+    with tab2:
+        st.markdown("### Registro de Evaluaciones de Simulacros")
+        df_results = pd.read_sql_query("SELECT * FROM results ORDER BY fecha DESC", conn)
+        if not df_results.empty:
+            st.dataframe(df_results, use_container_width=True)
+            csv_results = df_results.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                "📥 Descargar Historial de Resultados (CSV)", 
+                data=csv_results, 
+                file_name="resultados_simulacros.csv", 
+                mime="text/csv"
+            )
+        else:
+            st.info("Aún no se han completado simulacros.")
+
+    with tab3:
+        st.markdown("### Gestión del Banco de Reactivos")
+        
+        sub_tab1, sub_tab2 = st.tabs(["➕ Agregar Pregunta", "🗑️ Ver / Eliminar Preguntas"])
+        
+        with sub_tab1:
+            with st.form("add_question_form"):
+                materia = st.selectbox("Materia / Dominio:", [
+                    "Razonamiento Numérico", "Razonamiento Verbal", "Razonamiento Abstracto",
+                    "Biología", "Química", "Física", "Matemáticas", "Lengua y Literatura", "Historia"
+                ])
+                pregunta = st.text_area("Enunciado de la Pregunta:")
+                col_op1, col_op2 = st.columns(2)
+                with col_op1:
+                    op_a = st.text_input("Opción A:")
+                    op_b = st.text_input("Opción B:")
+                with col_op2:
+                    op_c = st.text_input("Opción C:")
+                    op_d = st.text_input("Opción D:")
+                
+                correcta = st.selectbox("Opción Correcta:", ["A", "B", "C", "D"])
+                explicacion = st.text_area("Explicación Teórica de la Respuesta:")
+                
+                submitted_q = st.form_submit_button("Guardar Nueva Pregunta")
+                if submitted_q:
+                    if pregunta and op_a and op_b and op_c and op_d:
+                        cursor.execute("""
+                            INSERT INTO questions (materia, pregunta, opcion_a, opcion_b, opcion_c, opcion_d, correcta, explicacion)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        """, (materia, pregunta, op_a, op_b, op_c, op_d, correcta, explicacion))
+                        conn.commit()
+                        st.success("¡Pregunta agregada con éxito al banco oficial!")
+                    else:
+                        st.error("Por favor, completa todos los campos obligatorios.")
+
+        with sub_tab2:
+            materias_disponibles = [
+                "Razonamiento Numérico", "Razonamiento Verbal", "Razonamiento Abstracto",
+                "Biología", "Química", "Física", "Matemáticas", "Lengua y Literatura", "Historia"
+            ]
+            filtro_materia = st.selectbox("Filtrar por materia para revisar o eliminar:", materias_disponibles, key="filter_mat_admin")
+            
+            cursor.execute("SELECT id, pregunta, correcta FROM questions WHERE materia = ?", (filtro_materia,))
+            preguntas_filtro = cursor.fetchall()
+            
+            if preguntas_filtro:
+                st.markdown(f"**Total de reactivos en {filtro_materia}:** {len(preguntas_filtro)}")
+                for q_item in preguntas_filtro:
+                    q_id, q_text, q_corr = q_item
+                    col_q_info, col_q_btn = st.columns([4, 1])
+                    with col_q_info:
+                        st.markdown(f"**ID {q_id}** (Correcta: {q_corr}): {q_text}")
+                    with col_q_btn:
+                        if st.button("Eliminar", key=f"del_q_{q_id}", use_container_width=True):
+                            cursor.execute("DELETE FROM questions WHERE id = ?", (q_id,))
+                            conn.commit()
+                            st.success(f"Pregunta {q_id} eliminada.")
+                            st.rerun()
+            else:
+                st.info(f"No hay preguntas registradas para {filtro_materia}.")
+
+    st.markdown("<br>", unsafe_allow_html=True)
     if st.button("Volver al Panel Principal", type="primary"):
         st.session_state.current_view = "dashboard"
         st.rerun()
