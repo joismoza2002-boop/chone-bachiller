@@ -163,13 +163,11 @@ cursor = conn.cursor()
 ADMIN_EMAILS = ["admin@chonebachiller.edu", "tu-correo-personal@gmail.com"] # Añade aquí tu correo personal de administración
 
 authenticator = Authenticate(
-    client_id=st.secrets["client_id"],
-    client_secret=st.secrets["client_secret"],
-    redirect_uri=st.secrets["redirect_uri"],
-    cookie_name=st.secrets["cookie_name"],
-    cookie_key=st.secrets["cookie_key"],
-    cookie_expiry_days=30,
+    secret_information=st.secrets["google_auth"],
+    server_url="https://chone-bachiller-5t6ujnz2cfmsaznndgpfdb.streamlit.app/",
+    parsed_url="https://chone-bachiller-5t6ujnz2cfmsaznndgpfdb.streamlit.app/"
 )
+
 authenticator.check_authorization()
 
 if "profile_complete" not in st.session_state: st.session_state.profile_complete = False
