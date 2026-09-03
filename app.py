@@ -162,14 +162,12 @@ cursor = conn.cursor()
 # ==========================================
 ADMIN_EMAILS = ["admin@chonebachiller.edu", "Joismoza2002@gmail.com"]
 
-
 authenticator = Authenticate(
     secret_information=st.secrets["google_auth"],
     server_url="https://chone-bachiller-5t6ujnz2cfmsaznndgpfdb.streamlit.app/",
     parsed_url="https://chone-bachiller-5t6ujnz2cfmsaznndgpfdb.streamlit.app/"
 )
 
-authenticator.check_authorization()
 
 if "profile_complete" not in st.session_state: st.session_state.profile_complete = False
 if "current_view" not in st.session_state: st.session_state.current_view = "dashboard"
