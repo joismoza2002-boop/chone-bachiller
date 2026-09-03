@@ -343,7 +343,6 @@ def start_exam(materia):
     cursor.execute("SELECT id, materia, pregunta, opcion_a, opcion_b, opcion_c, opcion_d, correcta, explicacion FROM questions WHERE materia = ?", (materia,))
     rows = cursor.fetchall()
     
-    # Prevención robusta: Si por alguna razón la tabla no tenía preguntas para esa materia, las creamos al vuelo
     if not rows:
         for k in range(1, 31):
             cursor.execute("""
@@ -390,31 +389,35 @@ def render_exam():
     seconds = remaining_seconds % 60
     time_str = f"{minutes:02d}:{seconds:02d}"
     
+    # Componente HTML / JS nativo optimizado con temporizador autónomo y recarga automática al llegar a 00:00
     timer_html = f"""
         <div style="background: #0f172a; color: #ffffff; padding: 1rem 1.5rem; border-radius: 12px; font-weight: 700; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15); margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
             <span style="font-size: 1.05rem;">Simulacro Oficial - {exam['materia']}</span>
-            <span id="countdown" style="font-size: 1.25rem; color: #38bdf8; font-family: monospace;">{time_str}</span>
+            <span id="live-countdown" style="font-size: 1.25rem; color: #38bdf8; font-family: monospace;">{time_str}</span>
         </div>
         <script>
-            if (!window.globalTimerInitialized) {{
-                window.globalTimerInitialized = true;
-                setInterval(function () {{
-                    const display = document.getElementById('countdown');
-                    if (!display) return;
-                    let parts = display.textContent.split(':');
-                    if (parts.length === 2) {{
-                        let m = parseInt(parts[0], 10);
-                        let s = parseInt(parts[1], 10);
-                        let total = m * 60 + s;
-                        if (total > 0) {{
-                            total--;
-                            let nm = Math.floor(total / 60);
-                            let ns = total % 60;
-                            display.textContent = String(nm).padStart(2, '0') + ":" + String(ns).padStart(2, '0');
-                        }}
-                    }}
-                }}, 1000);
+            if (window.timerInterval) {{
+                clearInterval(window.timerInterval);
             }}
+            window.timerInterval = setInterval(function () {{
+                const display = document.getElementById('live-countdown');
+                if (!display) return;
+                let parts = display.textContent.split(':');
+                if (parts.length === 2) {{
+                    let m = parseInt(parts[0], 10);
+                    let s = parseInt(parts[1], 10);
+                    let total = m * 60 + s;
+                    if (total > 0) {{
+                        total--;
+                        let nm = Math.floor(total / 60);
+                        let ns = total % 60;
+                        display.textContent = String(nm).padStart(2, '0') + ":" + String(ns).padStart(2, '0');
+                    }} else {{
+                        clearInterval(window.timerInterval);
+                        window.location.reload();
+                    }}
+                }}
+            }}, 1000);
         </script>
     """
     
@@ -554,3 +557,4 @@ else:
         render_results()
     elif st.session_state.current_view == "admin":
         render_admin()
+
