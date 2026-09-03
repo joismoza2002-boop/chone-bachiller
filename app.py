@@ -258,13 +258,14 @@ def render_top_navbar():
         if st.button("Mi Perfil", use_container_width=True, key="nav_perfil"):
             st.session_state.current_view = "profile_edit"
             st.rerun()
-        with col_nav3:
+    with col_nav3:
         if st.session_state.user_email in ADMIN_EMAILS:
             if st.button("Panel Admin", use_container_width=True, key="nav_admin"):
                 st.session_state.current_view = "admin"
                 st.rerun()
         else:
             st.markdown("")
+
     with col_nav4:
         if st.button("Cerrar Sesión", use_container_width=True, key="nav_logout"):
             st.session_state.logged_in = False
