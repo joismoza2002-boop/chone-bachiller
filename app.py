@@ -168,7 +168,7 @@ authenticator = Authenticate(
     redirect_uri=st.secrets["redirect_uri"],
     cookie_name=st.secrets["cookie_name"],
     cookie_key=st.secrets["cookie_key"],
-    cookie_expiry_days=30,
+    cookie_expiry_days=30
 )
 
 
