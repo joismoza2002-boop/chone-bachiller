@@ -163,9 +163,12 @@ cursor = conn.cursor()
 ADMIN_EMAILS = ["admin@chonebachiller.edu", "Joismoza2002@gmail.com"]
 
 authenticator = Authenticate(
-    secret_information=st.secrets["google_auth"],
-    server_url="https://chone-bachiller-5t6ujnz2cfmsaznndgpfdb.streamlit.app/",
-    parsed_url="https://chone-bachiller-5t6ujnz2cfmsaznndgpfdb.streamlit.app/"
+    client_id=st.secrets["client_id"],
+    client_secret=st.secrets["client_secret"],
+    redirect_uri=st.secrets["redirect_uri"],
+    cookie_name=st.secrets["cookie_name"],
+    cookie_key=st.secrets["cookie_key"],
+    cookie_expiry_days=30,
 )
 
 
