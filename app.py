@@ -27,45 +27,47 @@ st.markdown("""
     header {visibility: hidden;}
     .stApp { background-color: #f8fafc; }
 
-    /* Barra lateral corporativa */
+    /* Barra lateral corporativa con tipografía blanca impecable */
     [data-testid="stSidebar"] {
-        background-color: #0f172a;
+        background-color: #0b1329;
         border-right: 1px solid #1e293b;
+        padding-top: 1rem;
+    }
+    [data-testid="stSidebar"] h3 {
+        color: #ffffff !important;
+        font-weight: 800 !important;
+    }
+    [data-testid="stSidebar"] p {
+        color: #e2e8f0 !important;
     }
     [data-testid="stSidebar"] .stButton>button {
-        background: transparent;
-        color: #94a3b8;
-        border: 1px solid transparent;
+        background: rgba(255, 255, 255, 0.03);
+        color: #ffffff;
+        border: 1px solid rgba(255, 255, 255, 0.1);
         text-align: left;
         font-weight: 600;
-        border-radius: 8px;
+        border-radius: 10px;
         transition: all 0.2s ease;
     }
     [data-testid="stSidebar"] .stButton>button:hover {
-        background: rgba(59, 130, 246, 0.1);
+        background: #2563eb;
         color: #ffffff;
         border-color: #3b82f6;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
     }
 
-    /* Retícula y tarjetas profesionales */
-    .materias-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 1.5rem;
-        margin-top: 1rem;
-        margin-bottom: 2rem;
-    }
-    
+    /* Tarjetas de materias simétricas y limpias */
     .dashboard-card {
         background: #ffffff;
-        padding: 1.75rem;
+        padding: 1.5rem;
         border-radius: 16px;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
         border: 1px solid #e2e8f0;
+        height: 190px;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        height: 220px;
+        margin-bottom: 1rem;
         transition: all 0.25s ease;
     }
     .dashboard-card:hover {
@@ -202,22 +204,21 @@ def render_auth():
     
     with col_brand:
         st.markdown("""
-            <div style="background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); color: white; padding: 3.5rem 3rem; border-radius: 20px; min-height: 82vh; display: flex; flex-direction: column; justify-content: space-between;">
+            <div style="background: linear-gradient(135deg, #0b1329 0%, #1e3a8a 100%); color: white; padding: 3.5rem 3rem; border-radius: 20px; min-height: 82vh; display: flex; flex-direction: column; justify-content: space-between;">
                 <div>
                     <div style="display: flex; align-items: center; gap: 8px;">
-                        <i class="lucide-shield-check" style="font-size: 1.25rem; color: #38bdf8;"></i>
-                        <span style="background: rgba(255,255,255,0.15); padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">
+                        <span style="background: rgba(255,255,255,0.15); padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #ffffff;">
                             Cantón Chone · Manabí
                         </span>
                     </div>
                     <h1 style="font-size: 2.6rem; font-weight: 800; line-height: 1.2; margin-top: 1.5rem; margin-bottom: 1rem; color: white;">
                         Prepárate para tu examen de admisión universitaria
                     </h1>
-                    <p style="font-size: 1.05rem; color: rgba(255,255,255,0.85); line-height: 1.5;">
+                    <p style="font-size: 1.05rem; color: #e2e8f0; line-height: 1.5;">
                         Practica con simuladores oficiales de 30 preguntas y 30 minutos, mide tu tiempo y asegura tu cupo.
                     </p>
                 </div>
-                <p style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 2rem;">
+                <p style="font-size: 0.8rem; color: #cbd5e1; margin-top: 2rem;">
                     Plataforma educativa comunitaria · Chone Bachiller
                 </p>
             </div>
@@ -281,8 +282,8 @@ def render_profile_form():
 
 def render_sidebar():
     with st.sidebar:
-        st.markdown("<h3 style='color: white; margin-bottom: 0;'>Chone Bachiller</h3>", unsafe_allow_html=True)
-        st.markdown(f"<p style='color: #94a3b8; font-size: 0.85rem; margin-top: 4px;'>{st.session_state.user_email}</p>", unsafe_allow_html=True)
+        st.markdown("<h3 style='color: #ffffff; margin-bottom: 0;'>Chone Bachiller</h3>", unsafe_allow_html=True)
+        st.markdown(f"<p style='color: #e2e8f0; font-size: 0.85rem; margin-top: 4px;'>{st.session_state.user_email}</p>", unsafe_allow_html=True)
         st.markdown("<hr style='border-color: #1e293b; margin: 1rem 0;'>", unsafe_allow_html=True)
         
         if st.button("Simuladores Oficiales", use_container_width=True):
@@ -357,25 +358,23 @@ def render_dashboard():
         "Biología", "Química", "Física", "Matemáticas", "Lengua y Literatura", "Historia"
     ]
     
-    cards_html = "<div class='materias-grid'>"
-    for idx, materia in enumerate(materias):
-        cards_html += f"""
-            <div class='dashboard-card'>
-                <div>
-                    <h3 style='font-size: 1.1rem; font-weight: 700; color: #1e3a8a; margin-bottom: 8px;'>{materia}</h3>
-                    <p style='color: #64748b; font-size: 0.87rem; line-height: 1.4; margin-bottom: 0;'>Simulador estandarizado con 30 reactivos y retroalimentación teórica completa.</p>
-                </div>
-            </div>
-        """
-    cards_html += "</div>"
-    st.markdown(cards_html, unsafe_allow_html=True)
-    
-    cols = st.columns(3, gap="medium")
-    for idx, materia in enumerate(materias):
-        col = cols[idx % 3]
-        with col:
-            if st.button(f"Iniciar {materia}", key=f"btn_mat_{idx}"):
-                start_exam(materia)
+    # Renderizado limpio utilizando columnas nativas de Streamlit para evitar código plano en pantalla
+    for i in range(0, len(materias), 3):
+        cols = st.columns(3, gap="medium")
+        for j in range(3):
+            if i + j < len(materias):
+                materia = materias[i + j]
+                with cols[j]:
+                    st.markdown(f"""
+                        <div class='dashboard-card'>
+                            <div>
+                                <h3 style='font-size: 1.1rem; font-weight: 700; color: #1e3a8a; margin-bottom: 8px;'>{materia}</h3>
+                                <p style='color: #64748b; font-size: 0.87rem; line-height: 1.4; margin-bottom: 0;'>Simulador estandarizado con 30 reactivos y retroalimentación teórica completa.</p>
+                            </div>
+                        </div>
+                    """, unsafe_allow_html=True)
+                    if st.button(f"Iniciar {materia}", key=f"btn_mat_{i+j}"):
+                        start_exam(materia)
 
 def start_exam(materia):
     cursor.execute("SELECT id, materia, pregunta, opcion_a, opcion_b, opcion_c, opcion_d, correcta, explicacion FROM questions WHERE materia = ?", (materia,))
