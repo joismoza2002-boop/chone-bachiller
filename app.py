@@ -161,7 +161,7 @@ if "user_email" not in st.session_state: st.session_state.user_email = ""
 if "profile_complete" not in st.session_state: st.session_state.profile_complete = False
 if "current_view" not in st.session_state: st.session_state.current_view = "dashboard"
 if "exam_data" not in st.session_state: st.session_state.exam_data = None
-
+ADMIN_EMAILS = ["admin@chonebachiller.edu", "joismoza2002@gmail.com"]
 def render_auth():
     col_brand, col_login = st.columns([1.1, 0.9], gap="large")
     with col_brand:
