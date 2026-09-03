@@ -6,7 +6,6 @@ from datetime import datetime
 
 st.set_page_config(
     page_title="Chone Bachiller | Plataforma Educativa Oficial",
-    page_icon="🎓",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -371,33 +370,33 @@ def render_exam():
     seconds = remaining_seconds % 60
     time_str = f"{minutes:02d}:{seconds:02d}"
     
-    timer_html = """
+    timer_html = f"""
         <div style="background: #0f172a; color: #ffffff; padding: 1rem 1.5rem; border-radius: 12px; font-weight: 700; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15); margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 1.05rem;">Simulacro Oficial - {materia_title}</span>
+            <span style="font-size: 1.05rem;">Simulacro Oficial - {exam['materia']}</span>
             <span id="countdown" style="font-size: 1.25rem; color: #38bdf8; font-family: monospace;">{time_str}</span>
         </div>
         <script>
-            if (!window.globalTimerInitialized) {
+            if (!window.globalTimerInitialized) {{
                 window.globalTimerInitialized = true;
-                setInterval(function () {
+                setInterval(function () {{
                     const display = document.getElementById('countdown');
                     if (!display) return;
                     let parts = display.textContent.split(':');
-                    if (parts.length === 2) {
+                    if (parts.length === 2) {{
                         let m = parseInt(parts[0], 10);
                         let s = parseInt(parts[1], 10);
                         let total = m * 60 + s;
-                        if (total > 0) {
+                        if (total > 0) {{
                             total--;
                             let nm = Math.floor(total / 60);
                             let ns = total % 60;
                             display.textContent = String(nm).padStart(2, '0') + ":" + String(ns).padStart(2, '0');
-                        }
-                    }
-                }, 1000);
-            }
+                        }}
+                    }}
+                }}, 1000);
+            }}
         </script>
-    """.format(materia_title=exam['materia'], time_str=time_str)
+    """
     
     st.markdown(timer_html, unsafe_allow_html=True)
     
@@ -502,7 +501,7 @@ def render_admin():
             pregunta = st.text_area("Enunciado:")
             op_a, op_b, op_c, op_d = st.text_input("A:"), st.text_input("B:"), st.text_input("C:"), st.text_input("D:")
             correcta = st.selectbox("Correcta:", ["A", "B", "C", "D"])
-            explicacion = st.text_area("Explicacion:")
+            explicacion = st.text_input("Explicacion:")
             if st.form_submit_button("Guardar Pregunta"):
                 if pregunta and op_a:
                     cursor.execute("INSERT INTO questions (materia, pregunta, opcion_a, opcion_b, opcion_c, opcion_d, correcta, explicacion) VALUES (?,?,?,?,?,?,?,?)",
