@@ -77,7 +77,7 @@ st.markdown("""
 # ==========================================
 ADMIN_EMAILS = [
     "admin@chonebachiller.edu",
-    "tu-correo-real@gmail.com"  # <--- Cambia esto por tu correo real de Gmail
+    "tu-correo-real@gmail.com"
 ]
 
 def verificar_es_admin(email):
@@ -85,10 +85,10 @@ def verificar_es_admin(email):
         return False
     return email.strip().lower() in ADMIN_EMAILS
 
-# Autenticador leyendo de forma segura desde los Secrets de Streamlit
+# Autenticador leyendo de forma segura los secretos estructurados de Streamlit
 authenticator = Authenticate(
-    client_id=st.secrets["GOOGLE_CLIENT_ID"],
-    client_secret=st.secrets["GOOGLE_CLIENT_SECRET"],
+    client_id=st.secrets["auth"]["client_id"],
+    client_secret=st.secrets["auth"]["client_secret"],
     cookie_name='chone_bachiller_cookie',
     cookie_key='chone_secret_key_2026',
     redirect_uri='https://chone-bachiller-chcz6nwpmsejuezvxym9cz.streamlit.app/',
@@ -488,3 +488,4 @@ else:
         render_results()
     elif st.session_state.current_view == "admin":
         render_admin()
+
