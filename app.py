@@ -162,14 +162,7 @@ cursor = conn.cursor()
 # ==========================================
 ADMIN_EMAILS = ["admin@chonebachiller.edu", "Joismoza2002@gmail.com"]
 
-authenticator = Authenticate(
-    client_id=st.secrets["client_id"],
-    client_secret=st.secrets["client_secret"],
-    redirect_uri=st.secrets["redirect_uri"],
-    cookie_name=st.secrets["cookie_name"],
-    cookie_key=st.secrets["cookie_key"],
-    cookie_expiry_days=30
-)
+authenticator = Authenticate()
 
 
 
