@@ -4,7 +4,6 @@ import pandas as pd
 import random
 from datetime import datetime, timedelta
 
-# Configuración inicial de la página
 st.set_page_config(
     page_title="Chone Bachiller | Plataforma Educativa Oficial",
     page_icon="🎓",
@@ -12,14 +11,14 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Inyección de CSS avanzado para simetría perfecta y diseño SaaS
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    @import url('https://unpkg.com/lucide-static@latest/font/lucide.css');
 
     html, body, [class*="css"] {
         font-family: 'Plus Jakarta Sans', sans-serif;
-        color: #1e293b;
+        color: #0f172a;
         background-color: #f8fafc;
     }
 
@@ -28,59 +27,91 @@ st.markdown("""
     header {visibility: hidden;}
     .stApp { background-color: #f8fafc; }
 
-    /* Tarjetas simétricas y uniformes */
-    .dashboard-card {
-        background: #ffffff;
-        padding: 1.5rem;
-        border-radius: 16px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
-        border: 1px solid #e2e8f0;
-        height: 220px;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        margin-bottom: 1.2rem;
-        transition: all 0.3s ease;
+    /* Barra lateral corporativa */
+    [data-testid="stSidebar"] {
+        background-color: #0f172a;
+        border-right: 1px solid #1e293b;
     }
-    .dashboard-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 12px 20px -3px rgba(37, 99, 235, 0.1);
+    [data-testid="stSidebar"] .stButton>button {
+        background: transparent;
+        color: #94a3b8;
+        border: 1px solid transparent;
+        text-align: left;
+        font-weight: 600;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+    }
+    [data-testid="stSidebar"] .stButton>button:hover {
+        background: rgba(59, 130, 246, 0.1);
+        color: #ffffff;
         border-color: #3b82f6;
     }
 
+    /* Retícula y tarjetas profesionales */
+    .materias-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .dashboard-card {
+        background: #ffffff;
+        padding: 1.75rem;
+        border-radius: 16px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+        border: 1px solid #e2e8f0;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        height: 220px;
+        transition: all 0.25s ease;
+    }
+    .dashboard-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 20px -3px rgba(37, 99, 235, 0.08);
+        border-color: #2563eb;
+    }
+
+    /* Botones principales profesionales */
     .stButton>button {
         width: 100%;
-        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
         color: white;
         font-weight: 600;
         padding: 0.65rem 1rem;
         border-radius: 10px;
         border: none;
         box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
-        transition: all 0.25s ease;
+        transition: all 0.2s ease;
     }
     .stButton>button:hover {
-        background: linear-gradient(135deg, #1d4ed8 100%, #1e40af 100%);
+        background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
         box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
     }
 
+    /* Campos de formulario */
     .stTextInput>div>div>input, .stSelectbox>div>div>div {
         border-radius: 10px;
         border: 1.5px solid #cbd5e1;
         padding: 0.65rem;
-        background-color: #f8fafc;
+        background-color: #ffffff;
         font-size: 0.95rem;
     }
+    .stTextInput>div>div>input:focus, .stSelectbox>div>div>div:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
     
-    /* Cronómetro flotante profesional */
+    /* Panel de temporizador */
     .timer-box {
         background: #0f172a;
         color: #ffffff;
-        padding: 0.75rem 1.25rem;
+        padding: 1rem 1.5rem;
         border-radius: 12px;
         font-weight: 700;
-        text-align: center;
-        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
         margin-bottom: 1.5rem;
         display: flex;
         justify-content: space-between;
@@ -89,11 +120,9 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Inicialización de Base de Datos
 def init_db():
     conn = sqlite3.connect("chone_bachiller.db", check_same_thread=False)
     cursor = conn.cursor()
-    
     cursor.execute("CREATE TABLE IF NOT EXISTS users (email TEXT PRIMARY KEY)")
     user_columns = [
         ("nombres", "TEXT"), ("cedula", "TEXT"), ("ciudad", "TEXT"),
@@ -119,7 +148,6 @@ def init_db():
             explicacion TEXT
         )
     """)
-
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS results (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -174,16 +202,19 @@ def render_auth():
     
     with col_brand:
         st.markdown("""
-            <div style="background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%); color: white; padding: 3.5rem 3rem; border-radius: 20px; min-height: 82vh; display: flex; flex-direction: column; justify-content: space-between;">
+            <div style="background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); color: white; padding: 3.5rem 3rem; border-radius: 20px; min-height: 82vh; display: flex; flex-direction: column; justify-content: space-between;">
                 <div>
-                    <span style="background: rgba(255,255,255,0.15); padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">
-                        Cantón Chone · Manabí
-                    </span>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <i class="lucide-shield-check" style="font-size: 1.25rem; color: #38bdf8;"></i>
+                        <span style="background: rgba(255,255,255,0.15); padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">
+                            Cantón Chone · Manabí
+                        </span>
+                    </div>
                     <h1 style="font-size: 2.6rem; font-weight: 800; line-height: 1.2; margin-top: 1.5rem; margin-bottom: 1rem; color: white;">
                         Prepárate para tu examen de admisión universitaria
                     </h1>
                     <p style="font-size: 1.05rem; color: rgba(255,255,255,0.85); line-height: 1.5;">
-                        Practica con simuladores reales de 30 preguntas y 30 minutos, mide tu tiempo y asegura tu cupo.
+                        Practica con simuladores oficiales de 30 preguntas y 30 minutos, mide tu tiempo y asegura tu cupo.
                     </p>
                 </div>
                 <p style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 2rem;">
@@ -195,11 +226,11 @@ def render_auth():
     with col_login:
         st.markdown("<div style='height: 2.5rem;'></div>", unsafe_allow_html=True)
         st.markdown("## Inicia sesión")
-        st.markdown("Usa tu correo personal para ingresar. Solo necesitas hacerlo una vez.")
+        st.markdown("Usa tu correo personal para ingresar al sistema.")
         
         with st.form("login_form"):
             email_input = st.text_input("Correo electrónico personal", placeholder="tucorreo@gmail.com")
-            submitted = st.form_submit_button("Continuar con Google 🚀")
+            submitted = st.form_submit_button("Continuar")
             if submitted:
                 if email_input and "@" in email_input and "." in email_input:
                     st.session_state.user_email = email_input.strip().lower()
@@ -211,7 +242,7 @@ def render_auth():
                 else:
                     st.error("Introduce un correo electrónico válido.")
 
-        if st.button("🔑 Acceso rápido Coordinación (Admin)"):
+        if st.button("Acceso rápido Coordinación (Admin)"):
             st.session_state.user_email = "admin@chonebachiller.edu"
             st.session_state.logged_in = True
             st.session_state.profile_complete = True
@@ -222,16 +253,19 @@ def render_profile_form():
     st.markdown("Completa tus credenciales institucionales para habilitar el historial de simulacros.")
     
     with st.form("profile_form"):
-        nombres = st.text_input("Nombres y Apellidos Completos:")
-        cedula = st.text_input("Número de Cédula de Identidad:")
-        ciudad = st.text_input("Ciudad de Residencia:", value="Chone")
-        sector = st.text_input("Sector / Barrio:")
-        condicion = st.selectbox("Condición Actual:", ["Bachiller Graduado", "Estudiante en curso secundario"])
-        anio_graduacion = st.text_input("Año Previsto de Graduación:", value="2026")
-        unidad_educativa = st.text_input("Unidad Educativa de Origen:")
-        avatar = st.selectbox("Avatar de Perfil:", ["🎓 Estudiante Destacado", "⭐ Aspirante Pro", "💻 Becario Tech", "📚 Académico"])
+        col1, col2 = st.columns(2, gap="medium")
+        with col1:
+            nombres = st.text_input("Nombres y Apellidos Completos:")
+            cedula = st.text_input("Número de Cédula de Identidad:")
+            ciudad = st.text_input("Ciudad de Residencia:", value="Chone")
+            sector = st.text_input("Sector / Barrio:")
+        with col2:
+            condicion = st.selectbox("Condición Actual:", ["Bachiller Graduado", "Estudiante en curso secundario"])
+            anio_graduacion = st.text_input("Año Previsto de Graduación:", value="2026")
+            unidad_educativa = st.text_input("Unidad Educativa de Origen:")
+            avatar = st.selectbox("Perfil Académico:", ["Estudiante Destacado", "Aspirante Pro", "Becario Tech", "Investigador"])
         
-        submitted = st.form_submit_button("Guardar Perfil y Entrar al Sistema 🎯")
+        submitted = st.form_submit_button("Guardar Perfil y Entrar al Sistema")
         if submitted:
             if nombres and cedula and unidad_educativa:
                 cursor.execute("""
@@ -247,26 +281,26 @@ def render_profile_form():
 
 def render_sidebar():
     with st.sidebar:
-        st.markdown(f"### 🎓 Chone Bachiller")
-        st.markdown(f"**Usuario:** `{st.session_state.user_email}`")
-        st.markdown("---")
+        st.markdown("<h3 style='color: white; margin-bottom: 0;'>Chone Bachiller</h3>", unsafe_allow_html=True)
+        st.markdown(f"<p style='color: #94a3b8; font-size: 0.85rem; margin-top: 4px;'>{st.session_state.user_email}</p>", unsafe_allow_html=True)
+        st.markdown("<hr style='border-color: #1e293b; margin: 1rem 0;'>", unsafe_allow_html=True)
         
-        if st.button("📚 Simuladores Oficiales", use_container_width=True):
+        if st.button("Simuladores Oficiales", use_container_width=True):
             st.session_state.current_view = "dashboard"
             st.session_state.exam_data = None
             st.rerun()
             
-        if st.button("👤 Mi Perfil y Datos", use_container_width=True):
+        if st.button("Mi Perfil y Datos", use_container_width=True):
             st.session_state.current_view = "profile_edit"
             st.rerun()
             
         if st.session_state.user_email in ["admin@chonebachiller.edu", "admin@admin.com"]:
-            if st.button("🛠️ Panel Administrativo", use_container_width=True):
+            if st.button("Panel Administrativo", use_container_width=True):
                 st.session_state.current_view = "admin"
                 st.rerun()
                 
-        st.markdown("---")
-        if st.button("🚪 Cerrar Sesión", use_container_width=True):
+        st.markdown("<hr style='border-color: #1e293b; margin: 1rem 0;'>", unsafe_allow_html=True)
+        if st.button("Cerrar Sesión", use_container_width=True):
             st.session_state.logged_in = False
             st.session_state.user_email = ""
             st.session_state.profile_complete = False
@@ -275,33 +309,37 @@ def render_sidebar():
             st.rerun()
 
 def render_profile_edit():
-    st.markdown("## Gestión de Perfil y Datos 👤")
+    st.markdown("## Gestión de Perfil y Datos")
+    st.markdown("Actualiza tu información personal e institucional registrada en la plataforma.")
+    
     cursor.execute("SELECT nombres, cedula, ciudad, sector, condicion, anio_graduacion, unidad_educativa, avatar FROM users WHERE email = ?", (st.session_state.user_email,))
     user = cursor.fetchone()
     
     if user:
         nombres, cedula, ciudad, sector, condicion, anio_graduacion, unidad_educativa, avatar = user
     else:
-        nombres, cedula, ciudad, sector, condicion, anio_graduacion, unidad_educativa, avatar = "", "", "Chone", "", "Bachiller Graduado", "2026", "", "🎓 Estudiante Destacado"
+        nombres, cedula, ciudad, sector, condicion, anio_graduacion, unidad_educativa, avatar = "", "", "Chone", "", "Bachiller Graduado", "2026", "", "Estudiante Destacado"
 
     with st.form("edit_profile_form"):
-        new_nombres = st.text_input("Nombres y Apellidos:", value=nombres)
-        new_cedula = st.text_input("Número de Cédula:", value=cedula)
-        new_ciudad = st.text_input("Ciudad:", value=ciudad)
-        new_sector = st.text_input("Sector / Barrio:", value=sector)
+        col1, col2 = st.columns(2, gap="medium")
+        with col1:
+            new_nombres = st.text_input("Nombres y Apellidos:", value=nombres)
+            new_cedula = st.text_input("Número de Cédula:", value=cedula)
+            new_ciudad = st.text_input("Ciudad:", value=ciudad)
+            new_sector = st.text_input("Sector / Barrio:", value=sector)
+        with col2:
+            cond_list = ["Bachiller Graduado", "Estudiante en curso secundario"]
+            idx_cond = cond_list.index(condicion) if condicion in cond_list else 0
+            new_condicion = st.selectbox("Condición Actual:", cond_list, index=idx_cond)
+            
+            new_anio = st.text_input("Año de Graduación:", value=anio_graduacion)
+            new_colegio = st.text_input("Unidad Educativa:", value=unidad_educativa)
+            
+            avatars = ["Estudiante Destacado", "Aspirante Pro", "Becario Tech", "Investigador"]
+            idx_av = avatars.index(avatar) if avatar in avatars else 0
+            new_avatar = st.selectbox("Perfil Académico:", avatars, index=idx_av)
         
-        cond_list = ["Bachiller Graduado", "Estudiante en curso secundario"]
-        idx_cond = cond_list.index(condicion) if condicion in cond_list else 0
-        new_condicion = st.selectbox("Condición Actual:", cond_list, index=idx_cond)
-        
-        new_anio = st.text_input("Año de Graduación:", value=anio_graduacion)
-        new_colegio = st.text_input("Unidad Educativa:", value=unidad_educativa)
-        
-        avatars = ["🎓 Estudiante Destacado", "⭐ Aspirante Pro", "💻 Becario Tech", "📚 Académico"]
-        idx_av = avatars.index(avatar) if avatar in avatars else 0
-        new_avatar = st.selectbox("Avatar Seleccionado:", avatars, index=idx_av)
-        
-        submitted = st.form_submit_button("Actualizar Datos del Perfil 💾")
+        submitted = st.form_submit_button("Actualizar Datos del Perfil")
         if submitted:
             cursor.execute("""
                 UPDATE users SET nombres=?, cedula=?, ciudad=?, sector=?, condicion=?, anio_graduacion=?, unidad_educativa=?, avatar=?
@@ -311,26 +349,31 @@ def render_profile_edit():
             st.success("¡Perfil actualizado con éxito!")
 
 def render_dashboard():
-    st.markdown("## Panel Académico 📚")
-    st.markdown(f"Selecciona una materia para iniciar tu simulacro oficial (30 preguntas en 30 minutos).")
+    st.markdown("## Panel Académico")
+    st.markdown("Selecciona una materia para iniciar tu simulacro oficial (30 preguntas en 30 minutos).")
     
     materias = [
         "Razonamiento Numérico", "Razonamiento Verbal", "Razonamiento Abstracto",
         "Biología", "Química", "Física", "Matemáticas", "Lengua y Literatura", "Historia"
     ]
     
+    cards_html = "<div class='materias-grid'>"
+    for idx, materia in enumerate(materias):
+        cards_html += f"""
+            <div class='dashboard-card'>
+                <div>
+                    <h3 style='font-size: 1.1rem; font-weight: 700; color: #1e3a8a; margin-bottom: 8px;'>{materia}</h3>
+                    <p style='color: #64748b; font-size: 0.87rem; line-height: 1.4; margin-bottom: 0;'>Simulador estandarizado con 30 reactivos y retroalimentación teórica completa.</p>
+                </div>
+            </div>
+        """
+    cards_html += "</div>"
+    st.markdown(cards_html, unsafe_allow_html=True)
+    
     cols = st.columns(3, gap="medium")
     for idx, materia in enumerate(materias):
         col = cols[idx % 3]
         with col:
-            st.markdown(f"""
-                <div class="dashboard-card">
-                    <div>
-                        <h3 style="font-size: 1.1rem; font-weight: 700; color: #1e3a8a; margin-bottom: 6px;">📘 {materia}</h3>
-                        <p style="color: #64748b; font-size: 0.85rem; margin-bottom: 0;">Simulador estandarizado con 30 reactivos y retroalimentación teórica completa.</p>
-                    </div>
-                </div>
-            """, unsafe_allow_html=True)
             if st.button(f"Iniciar {materia}", key=f"btn_mat_{idx}"):
                 start_exam(materia)
 
@@ -353,12 +396,11 @@ def render_exam():
     exam = st.session_state.exam_data
     questions = exam["questions"]
     
-    # Cálculo del tiempo restante (30 minutos)
     elapsed = datetime.now() - exam["start_time"]
     remaining_seconds = max(0, 1800 - int(elapsed.total_seconds()))
     
     if remaining_seconds <= 0:
-        st.warning("¡El tiempo del simulacro ha expirado! Enviando respuestas registradas automáticamente...")
+        st.warning("El tiempo del simulacro ha expirado. Enviando respuestas registradas automáticamente.")
         finish_exam(auto_submitted=True)
         return
 
@@ -366,7 +408,7 @@ def render_exam():
     
     st.markdown(f"""
         <div class="timer-box">
-            <span>⏱️ Simulacro Oficial: {exam["materia"]}</span>
+            <span>Simulacro Oficial: {exam["materia"]}</span>
             <span style="font-size: 1.2rem; color: #38bdf8;">Tiempo Restante: {mins:02d}:{secs:02d}</span>
         </div>
     """, unsafe_allow_html=True)
@@ -379,8 +421,8 @@ def render_exam():
     st.markdown(f"**Reactivo {idx + 1} de {len(questions)}**")
     
     st.markdown(f"""
-        <div class="dashboard-card" style="height: auto; min-height: 140px; margin-top: 0.8rem;">
-            <h3 style="font-size: 1.05rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem;">{q_text}</h3>
+        <div class="dashboard-card" style="height: auto; min-height: 120px; margin-top: 0.8rem; margin-bottom: 1.2rem;">
+            <h3 style="font-size: 1.05rem; font-weight: 700; color: #0f172a; margin-bottom: 0;">{q_text}</h3>
         </div>
     """, unsafe_allow_html=True)
     
@@ -393,18 +435,18 @@ def render_exam():
     
     col_prev, col_next, col_fin = st.columns(3)
     with col_prev:
-        if idx > 0 and st.button("⬅️ Anterior"):
+        if idx > 0 and st.button("Anterior"):
             exam["current_idx"] -= 1
             st.rerun()
     with col_next:
-        if idx < len(questions) - 1 and st.button("Siguiente ➡️"):
+        if idx < len(questions) - 1 and st.button("Siguiente"):
             exam["current_idx"] += 1
             st.rerun()
     with col_fin:
         answered_count = len(exam["answers"])
         total_q = len(questions)
         if answered_count == total_q:
-            if st.button("Finalizar y Enviar 🏁", type="primary"):
+            if st.button("Finalizar y Enviar", type="primary"):
                 finish_exam(auto_submitted=False)
         else:
             st.markdown(f"<p style='color: #64748b; font-size: 0.8rem; text-align: center; margin-top: 10px;'>Faltan {total_q - answered_count} por responder</p>", unsafe_allow_html=True)
@@ -432,7 +474,7 @@ def render_results():
     score = sum(1 for q in questions if answers.get(q[0]) == q[7])
     total = len(questions)
     
-    st.markdown("## Resultados Oficiales 📊")
+    st.markdown("## Resultados Oficiales")
     col1, col2 = st.columns(2)
     with col1: st.metric(label="Puntaje Obtenido", value=f"{score} / {total}")
     with col2: st.metric(label="Porcentaje de Éxito", value=f"{(score/total)*100:.1f}%")
@@ -442,27 +484,27 @@ def render_results():
         q_id, _, q_text, op_a, op_b, op_c, op_d, correcta, explicacion = q
         user_ans = answers.get(q_id, "No respondida")
         is_correct = (user_ans == correcta)
-        status = "✅ Correcta" if is_correct else "❌ Incorrecta"
+        status = "Correcta" if is_correct else "Incorrecta"
         
         with st.expander(f"Reactivo {idx + 1} — {status}"):
             st.write(f"**Enunciado:** {q_text}")
             st.write(f"Tu respuesta: **{user_ans}** | Correcta: **{correcta}**")
             st.info(f"**Explicación teórica:** {explicacion}")
             
-    if st.button("Volver al Panel Principal 🏠", type="primary"):
+    if st.button("Volver al Panel Principal", type="primary"):
         st.session_state.current_view = "dashboard"
         st.session_state.exam_data = None
         st.rerun()
 
 def render_admin():
-    st.markdown("## Panel Administrativo 🛠️")
+    st.markdown("## Panel Administrativo")
     tab1, tab2 = st.tabs(["Base de Estudiantes", "Gestión de Banco de Preguntas"])
     
     with tab1:
         df_users = pd.read_sql_query("SELECT * FROM users", conn)
         st.dataframe(df_users, use_container_width=True)
         if not df_users.empty:
-            st.download_button("Descargar CSV de Estudiantes 📥", data=df_users.to_csv(index=False).encode('utf-8'), file_name="estudiantes.csv", mime="text/csv")
+            st.download_button("Descargar CSV de Estudiantes", data=df_users.to_csv(index=False).encode('utf-8'), file_name="estudiantes.csv", mime="text/csv")
             
     with tab2:
         with st.form("add_q"):
@@ -480,7 +522,7 @@ def render_admin():
                 else:
                     st.error("Completa los campos obligatorios.")
                     
-    if st.button("⬅️ Volver al Dashboard"):
+    if st.button("Volver al Dashboard"):
         st.session_state.current_view = "dashboard"
         st.rerun()
 
