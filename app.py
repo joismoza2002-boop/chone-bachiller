@@ -86,22 +86,14 @@ def verificar_es_admin(email):
     return email.strip().lower() in ADMIN_EMAILS
 
 # Autenticador leyendo de forma segura los secretos estructurados de Streamlit
-try:
-    c_id = st.secrets["client_id"]
-    c_sec = st.secrets["client_secret"]
-except:
-    c_id = "951212601524-vpb90d6qup3471qm36k74eqprpcdvku.apps.googleusercontent.com"
-    c_sec = "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"
-
 authenticator = Authenticate(
-    client_id=c_id,
-    client_secret=c_sec,
+    client_id="951212601524-vpb90d6qup3471qm36k74eqprpcdvku.apps.googleusercontent.com",
+    client_secret="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",
     cookie_name='chone_bachiller_cookie',
     cookie_key='chone_secret_key_2026',
     redirect_uri='https://n9cz.streamlit.app/',
     scope=['openid', 'https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/userinfo.profile']
 )
-
 def init_db():
     conn = sqlite3.connect("chone_bachiller.db", check_same_thread=False)
     cursor = conn.cursor()
