@@ -489,32 +489,122 @@ def render_results():
 
 def render_admin():
     render_top_navbar()
-    st.markdown("## Panel Administrativo")
-    tab1, tab2 = st.tabs(["Base de Estudiantes", "Gestión de Banco de Preguntas"])
-    
+    st.markdown("## ⚙️ Panel de Administración y Control")
+    st.markdown("Supervisa el rendimiento general, gestiona el banco de reactivos y revisa a los aspirantes registrados.")
+
+    # Métricas generales del sistema
+    cursor.execute("SELECT COUNT(*) FROM users")
+    total_users = cursor.fetchone()[0]
+    cursor.execute("SELECT COUNT(*) FROM results")
+    total_exams = cursor.fetchone()[0]
+    cursor.execute("SELECT COUNT(*) FROM questions")
+    total_questions = cursor.fetchone()[0]
+
+    col_m1, col_m2, col_m3 = st.columns(3)
+    with col_m1:
+        st.metric("Estudiantes Registrados", total_users)
+    with col_m2:
+        st.metric("Simulacros Realizados", total_exams)
+    with col_m3:
+        st.metric("Banco de Preguntas", total_questions)
+
+    st.markdown("<hr style='border-color: #cbd5e1; margin: 1.5rem 0;'>", unsafe_allow_html=True)
+
+    tab1, tab2, tab3 = st.tabs(["👥 Base de Estudiantes", "📊 Historial de Resultados", "📝 Gestión de Preguntas"])
+
     with tab1:
+        st.markdown("### Estudiantes Registrados en el Sistema")
         df_users = pd.read_sql_query("SELECT * FROM users", conn)
-        st.dataframe(df_users, use_container_width=True)
         if not df_users.empty:
-            st.download_button("Descargar CSV de Estudiantes", data=df_users.to_csv(index=False).encode('utf-8'), file_name="estudiantes.csv", mime="text/csv")
-            
+            st.dataframe(df_users, use_container_width=True)
+            csv_users = df_users.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                "📥 Descargar Base de Estudiantes (CSV)", 
+                data=csv_users, 
+                file_name="estudiantes_chone_bachiller.csv", 
+                mime="text/csv"
+            )
+        else:
+            st.info("Aún no hay estudiantes registrados.")
+
     with tab2:
-        with st.form("add_q"):
-            materia = st.selectbox("Materia:", ["Razonamiento Numérico", "Razonamiento Verbal", "Razonamiento Abstracto", "Biología", "Química", "Física", "Matemáticas", "Lengua y Literatura", "Historia"])
-            pregunta = st.text_area("Enunciado:")
-            op_a, op_b, op_c, op_d = st.text_input("A:"), st.text_input("B:"), st.text_input("C:"), st.text_input("D:")
-            correcta = st.selectbox("Correcta:", ["A", "B", "C", "D"])
-            explicacion = st.text_input("Explicación:")
-            if st.form_submit_button("Guardar Pregunta"):
-                if pregunta and op_a:
-                    cursor.execute("INSERT INTO questions (materia, pregunta, opcion_a, opcion_b, opcion_c, opcion_d, correcta, explicacion) VALUES (?,?,?,?,?,?,?,?)",
-                                   (materia, pregunta, op_a, op_b, op_c, op_d, correcta, explicacion))
-                    conn.commit()
-                    st.success("Pregunta agregada con éxito.")
-                else:
-                    st.error("Completa los campos obligatorios.")
-                    
-    if st.button("Volver al Dashboard"):
+        st.markdown("### Registro de Evaluaciones de Simulacros")
+        df_results = pd.read_sql_query("SELECT * FROM results ORDER BY fecha DESC", conn)
+        if not df_results.empty:
+            st.dataframe(df_results, use_container_width=True)
+            csv_results = df_results.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                "📥 Descargar Historial de Resultados (CSV)", 
+                data=csv_results, 
+                file_name="resultados_simulacros.csv", 
+                mime="text/csv"
+            )
+        else:
+            st.info("Aún no se han completado simulacros.")
+
+    with tab3:
+        st.markdown("### Gestión del Banco de Reactivos")
+        
+        sub_tab1, sub_tab2 = st.tabs(["➕ Agregar Pregunta", "🗑️ Ver / Eliminar Preguntas"])
+        
+        with sub_tab1:
+            with st.form("add_question_form"):
+                materia = st.selectbox("Materia / Dominio:", [
+                    "Razonamiento Numérico", "Razonamiento Verbal", "Razonamiento Abstracto",
+                    "Biología", "Química", "Física", "Matemáticas", "Lengua y Literatura", "Historia"
+                ])
+                pregunta = st.text_area("Enunciado de la Pregunta:")
+                col_op1, col_op2 = st.columns(2)
+                with col_op1:
+                    op_a = st.text_input("Opción A:")
+                    op_b = st.text_input("Opción B:")
+                with col_op2:
+                    op_c = st.text_input("Opción C:")
+                    op_d = st.text_input("Opción D:")
+                
+                correcta = st.selectbox("Opción Correcta:", ["A", "B", "C", "D"])
+                explicacion = st.text_area("Explicación Teórica de la Respuesta:")
+                
+                submitted_q = st.form_submit_button("Guardar Nueva Pregunta")
+                if submitted_q:
+                    if pregunta and op_a and op_b and op_c and op_d:
+                        cursor.execute("""
+                            INSERT INTO questions (materia, pregunta, opcion_a, opcion_b, opcion_c, opcion_d, correcta, explicacion)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        """, (materia, pregunta, op_a, op_b, op_c, op_d, correcta, explicacion))
+                        conn.commit()
+                        st.success("¡Pregunta agregada con éxito al banco oficial!")
+                    else:
+                        st.error("Por favor, completa todos los campos obligatorios.")
+
+        with sub_tab2:
+            materias_disponibles = [
+                "Razonamiento Numérico", "Razonamiento Verbal", "Razonamiento Abstracto",
+                "Biología", "Química", "Física", "Matemáticas", "Lengua y Literatura", "Historia"
+            ]
+            filtro_materia = st.selectbox("Filtrar por materia para revisar o eliminar:", materias_disponibles, key="filter_mat_admin")
+            
+            cursor.execute("SELECT id, pregunta, correcta FROM questions WHERE materia = ?", (filtro_materia,))
+            preguntas_filtro = cursor.fetchall()
+            
+            if preguntas_filtro:
+                st.markdown(f"**Total de reactivos en {filtro_materia}:** {len(preguntas_filtro)}")
+                for q_item in preguntas_filtro:
+                    q_id, q_text, q_corr = q_item
+                    col_q_info, col_q_btn = st.columns([4, 1])
+                    with col_q_info:
+                        st.markdown(f"**ID {q_id}** (Correcta: {q_corr}): {q_text}")
+                    with col_q_btn:
+                        if st.button("Eliminar", key=f"del_q_{q_id}", use_container_width=True):
+                            cursor.execute("DELETE FROM questions WHERE id = ?", (q_id,))
+                            conn.commit()
+                            st.success(f"Pregunta {q_id} eliminada.")
+                            st.rerun()
+            else:
+                st.info(f"No hay preguntas registradas para {filtro_materia}.")
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    if st.button("Volver al Panel Principal", type="primary"):
         st.session_state.current_view = "dashboard"
         st.rerun()
 
@@ -533,3 +623,4 @@ else:
         render_results()
     elif st.session_state.current_view == "admin":
         render_admin()
+
