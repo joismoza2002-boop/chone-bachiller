@@ -172,6 +172,7 @@ authenticator = Authenticate(
 )
 
 
+
 if "profile_complete" not in st.session_state: st.session_state.profile_complete = False
 if "current_view" not in st.session_state: st.session_state.current_view = "dashboard"
 if "exam_data" not in st.session_state: st.session_state.exam_data = None
