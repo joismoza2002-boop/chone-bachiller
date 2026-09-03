@@ -364,7 +364,6 @@ def render_exam():
     exam = st.session_state.exam_data
     questions = exam["questions"]
     
-    # Cálculo preciso del tiempo restante basado en la sesión
     elapsed_seconds = (datetime.now() - exam["start_time"]).total_seconds()
     remaining_seconds = max(0, 1800 - int(elapsed_seconds))
     
@@ -377,28 +376,29 @@ def render_exam():
     seconds = remaining_seconds % 60
     time_str = f"{minutes:02d}:{seconds:02d}"
     
-    timer_html = f"""
+    timer_html = """
         <div style="background: #0f172a; color: #ffffff; padding: 1rem 1.5rem; border-radius: 12px; font-weight: 700; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15); margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 1.05rem;">Simulacro Oficial — {exam['materia']}</span>
+            <span style="font-size: 1.05rem;">Simulacro Oficial — {materia_title}</span>
             <span id="countdown" style="font-size: 1.25rem; color: #38bdf8; font-family: monospace;">{time_str}</span>
         </div>
         <script>
             if (window.timerInterval) clearInterval(window.timerInterval);
-            let totalSeconds = {remaining_seconds};
+            let totalSeconds = {rem_sec};
             const display = document.getElementById('countdown');
-            window.timerInterval = setInterval(function () {
-                if (totalSeconds <= 0) {
+            window.timerInterval = setInterval(function () {{
+                if (totalSeconds <= 0) {{
                     clearInterval(window.timerInterval);
                     display.textContent = "00:00";
                     return;
-                }
+                }}
                 totalSeconds--;
                 let m = Math.floor(totalSeconds / 60);
                 let s = totalSeconds % 60;
                 display.textContent = String(m).padStart(2, '0') + ":" + String(s).padStart(2, '0');
-            }, 1000);
+            }}, 1000);
         </script>
-    """
+    """.format(materia_title=exam['materia'], time_str=time_str, rem_sec=remaining_seconds)
+    
     st.markdown(timer_html, unsafe_allow_html=True)
     
     idx = exam["current_idx"]
@@ -531,4 +531,3 @@ else:
         render_results()
     elif st.session_state.current_view == "admin":
         render_admin()
-
