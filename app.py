@@ -26,7 +26,7 @@ st.markdown("""
     header {visibility: hidden;}
     .stApp { background-color: #f8fafc; }
 
-    /* Barra lateral corporativa fija y siempre visible con tipografía blanca */
+    /* Barra lateral fija y garantizada */
     [data-testid="stSidebar"] {
         background-color: #0b1329 !important;
         border-right: 1px solid #1e293b;
@@ -40,12 +40,14 @@ st.markdown("""
         color: #e2e8f0 !important;
     }
     [data-testid="stSidebar"] .stButton>button {
-        background: rgba(255, 255, 255, 0.03);
+        background: rgba(255, 255, 255, 0.04);
         color: #ffffff !important;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.12);
         text-align: left;
         font-weight: 600;
         border-radius: 10px;
+        width: 100%;
+        margin-bottom: 0.4rem;
         transition: all 0.2s ease;
     }
     [data-testid="stSidebar"] .stButton>button:hover {
@@ -55,19 +57,33 @@ st.markdown("""
         box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
     }
 
-    /* Tarjetas de materias estrictamente simétricas y uniformes */
+    /* Contenedor Grid estricto para tarjetas 100% simétricas e idénticas */
+    .materias-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    @media (max-width: 1024px) {
+        .materias-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 640px) {
+        .materias-grid { grid-template-columns: 1fr; }
+    }
+
     .dashboard-card {
         background: #ffffff;
         padding: 1.5rem;
         border-radius: 16px;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
         border: 1px solid #e2e8f0;
-        height: 240px;
+        height: 220px;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        margin-bottom: 1.2rem;
         transition: all 0.25s ease;
+        box-sizing: border-box;
     }
     .dashboard-card:hover {
         transform: translateY(-4px);
@@ -75,13 +91,12 @@ st.markdown("""
         border-color: #2563eb;
     }
 
-    /* Botones principales profesionales */
+    /* Botones generales profesionales */
     .stButton>button {
-        width: 100%;
         background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
         color: white;
         font-weight: 600;
-        padding: 0.65rem 1rem;
+        padding: 0.6rem 1rem;
         border-radius: 10px;
         border: none;
         box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
@@ -92,17 +107,12 @@ st.markdown("""
         box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
     }
 
-    /* Campos de formulario */
     .stTextInput>div>div>input, .stSelectbox>div>div>div {
         border-radius: 10px;
         border: 1.5px solid #cbd5e1;
         padding: 0.65rem;
         background-color: #ffffff;
         font-size: 0.95rem;
-    }
-    .stTextInput>div>div>input:focus, .stSelectbox>div>div>div:focus {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
     }
     </style>
 """, unsafe_allow_html=True)
@@ -351,21 +361,29 @@ def render_dashboard():
         "Biología", "Química", "Física", "Matemáticas", "Lengua y Literatura", "Historia"
     ]
     
+    # Generación estricta de tarjetas simétricas mediante Grid CSS
+    grid_html = "<div class='materias-grid'>"
+    for idx, materia in enumerate(materias):
+        grid_html += f"""
+            <div class='dashboard-card'>
+                <div>
+                    <h3 style='font-size: 1.05rem; font-weight: 700; color: #1e3a8a; margin-bottom: 8px;'>{materia}</h3>
+                    <p style='color: #64748b; font-size: 0.85rem; line-height: 1.4; margin-bottom: 0;'>Simulador oficial con 30 reactivos estandarizados y retroalimentación teórica.</p>
+                </div>
+            </div>
+        """
+    grid_html += "</div>"
+    st.markdown(grid_html, unsafe_allow_html=True)
+    
+    # Botones de inicio colocados de forma simétrica debajo de cada columna visual
+    st.markdown("### Selecciona el examen a rendir:")
     for i in range(0, len(materias), 3):
         cols = st.columns(3, gap="medium")
         for j in range(3):
             if i + j < len(materias):
                 materia = materias[i + j]
                 with cols[j]:
-                    st.markdown(f"""
-                        <div class='dashboard-card'>
-                            <div>
-                                <h3 style='font-size: 1.1rem; font-weight: 700; color: #1e3a8a; margin-bottom: 8px;'>{materia}</h3>
-                                <p style='color: #64748b; font-size: 0.87rem; line-height: 1.4; margin-bottom: 0;'>Simulador oficial con 30 reactivos estandarizados y retroalimentación teórica completa.</p>
-                            </div>
-                        </div>
-                    """, unsafe_allow_html=True)
-                    if st.button(f"Iniciar {materia}", key=f"btn_mat_{i+j}"):
+                    if st.button(f"Iniciar {materia}", key=f"btn_mat_{i+j}", use_container_width=True):
                         start_exam(materia)
 
 def start_exam(materia):
@@ -387,7 +405,6 @@ def render_exam():
     exam = st.session_state.exam_data
     questions = exam["questions"]
     
-    # Cronómetro fluido en JS en el navegador
     timer_html = """
         <div style="background: #0f172a; color: #ffffff; padding: 1rem 1.5rem; border-radius: 12px; font-weight: 700; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15); margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
             <span style="font-size: 1.05rem;">Simulacro Oficial</span>
@@ -418,7 +435,7 @@ def render_exam():
     st.markdown(f"**Reactivo {idx + 1} de {len(questions)}**")
     
     st.markdown(f"""
-        <div class="dashboard-card" style="height: auto; min-height: 130px; margin-top: 0.8rem; margin-bottom: 1.2rem;">
+        <div class="dashboard-card" style="height: auto; min-height: 120px; margin-top: 0.8rem; margin-bottom: 1.2rem; width: 100%;">
             <h3 style="font-size: 1.05rem; font-weight: 700; color: #0f172a; margin-bottom: 0;">{q_text}</h3>
         </div>
     """, unsafe_allow_html=True)
@@ -432,18 +449,18 @@ def render_exam():
     
     col_prev, col_next, col_fin = st.columns(3)
     with col_prev:
-        if idx > 0 and st.button("Anterior"):
+        if idx > 0 and st.button("Anterior", use_container_width=True):
             exam["current_idx"] -= 1
             st.rerun()
     with col_next:
-        if idx < len(questions) - 1 and st.button("Siguiente"):
+        if idx < len(questions) - 1 and st.button("Siguiente", use_container_width=True):
             exam["current_idx"] += 1
             st.rerun()
     with col_fin:
         answered_count = len(exam["answers"])
         total_q = len(questions)
         if answered_count == total_q:
-            if st.button("Finalizar y Enviar", type="primary"):
+            if st.button("Finalizar y Enviar", type="primary", use_container_width=True):
                 finish_exam()
         else:
             st.markdown(f"<p style='color: #64748b; font-size: 0.8rem; text-align: center; margin-top: 10px;'>Faltan {total_q - answered_count} por responder</p>", unsafe_allow_html=True)
@@ -523,7 +540,7 @@ def render_admin():
         st.session_state.current_view = "dashboard"
         st.rerun()
 
-# Control de flujo principal garantizando que la barra lateral aparezca siempre tras la autenticación
+# Control de flujo garantizando que la barra lateral aparezca siempre tras la autenticación
 if not st.session_state.logged_in:
     render_auth()
 elif not st.session_state.profile_complete:
