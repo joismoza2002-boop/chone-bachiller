@@ -203,11 +203,6 @@ def render_auth():
                 else:
                     st.error("Introduce un correo electrónico válido.")
 
-        if st.button("Acceso rápido Coordinación (Admin)"):
-            st.session_state.user_email = "admin@chonebachiller.edu"
-            st.session_state.logged_in = True
-            st.session_state.profile_complete = True
-            st.rerun()
 
 def render_profile_form():
     st.markdown("## Registro de Perfil Académico")
