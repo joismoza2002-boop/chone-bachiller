@@ -160,7 +160,8 @@ cursor = conn.cursor()
 # ==========================================
 # CONFIGURACIÓN DE GOOGLE OAUTH Y ADMINS
 # ==========================================
-ADMIN_EMAILS = ["admin@chonebachiller.edu", "tu-correo-personal@gmail.com"] # Añade aquí tu correo personal de administración
+ADMIN_EMAILS = ["admin@chonebachiller.edu", "Joismoza2002@gmail.com"]
+
 
 authenticator = Authenticate(
     secret_information=st.secrets["google_auth"],
