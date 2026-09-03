@@ -258,8 +258,8 @@ def render_top_navbar():
         if st.button("Mi Perfil", use_container_width=True, key="nav_perfil"):
             st.session_state.current_view = "profile_edit"
             st.rerun()
-    with col_nav3:
-        if st.session_state.user_email in ["admin@chonebachiller.edu", "admin@admin.com"]:
+        with col_nav3:
+        if st.session_state.user_email in ADMIN_EMAILS:
             if st.button("Panel Admin", use_container_width=True, key="nav_admin"):
                 st.session_state.current_view = "admin"
                 st.rerun()
