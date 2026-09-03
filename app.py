@@ -86,13 +86,13 @@ def verificar_es_admin(email):
     return email.strip().lower() in ADMIN_EMAILS
 
 authenticator = Authenticate(
-    "951212601524-vpb90d6qup3471qm36k74eqprpcdvku.apps.googleusercontent.com",
-    "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",
-    'chone_bachiller_cookie',
-    'chone_secret_key_2026',
-    'https://n9cz.streamlit.app/',
-    ['openid', 'https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/userinfo.profile']
+    client_id="951212601524-vpb90d6qup3471qm36k74eqprpcdvku.apps.googleusercontent.com",
+    client_secret="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",
+    redirect_uri="https://pfdb.streamlit.app/",
+    cookie_name="chone_bachiller_cookie",
+    cookie_key="chone_secret_key_2026"
 )
+
 def init_db():
     conn = sqlite3.connect("chone_bachiller.db", check_same_thread=False)
     cursor = conn.cursor()
