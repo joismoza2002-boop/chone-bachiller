@@ -488,6 +488,12 @@ def render_results():
         st.rerun()
 
 def render_admin():
+    if st.session_state.user_email not in ADMIN_EMAILS:
+        st.error("Acceso denegado. No tienes permisos de administración.")
+        st.session_state.current_view = "dashboard"
+        st.rerun()
+        return
+
     render_top_navbar()
     st.markdown("## ⚙️ Panel de Administración y Control")
     st.markdown("Supervisa el rendimiento general, gestiona el banco de reactivos y revisa a los aspirantes registrados.")
