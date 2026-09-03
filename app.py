@@ -163,10 +163,12 @@ cursor = conn.cursor()
 ADMIN_EMAILS = ["admin@chonebachiller.edu", "Joismoza2002@gmail.com"]
 
 authenticator = Authenticate(
-    credential_file=st.secrets,
-    cookie_name=st.secrets["cookie_name"],
-    cookie_key=st.secrets["cookie_key"],
-    cookie_expiry_days=30
+    st.secrets["client_id"],
+    st.secrets["client_secret"],
+    st.secrets["redirect_uri"],
+    st.secrets["cookie_name"],
+    st.secrets["cookie_key"],
+    30
 )
 
 if "profile_complete" not in st.session_state: st.session_state.profile_complete = False
