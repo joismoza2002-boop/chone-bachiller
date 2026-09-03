@@ -162,23 +162,10 @@ cursor = conn.cursor()
 # ==========================================
 ADMIN_EMAILS = ["admin@chonebachiller.edu", "Joismoza2002@gmail.com"]
 
-import json
-
-# Construimos las credenciales en memoria de forma segura sin exponer archivos
-credentials_dict = {
-    "web": {
-        "client_id": st.secrets["client_id"],
-        "project_id": st.secrets.get("project_id", "chone-507511"),
-        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-        "token_uri": "https://oauth2.googleapis.com/token",
-        "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-        "client_secret": st.secrets["client_secret"],
-        "redirect_uris": [st.secrets["redirect_uri"]]
-    }
-}
-
 authenticator = Authenticate(
-    credential_loader=credentials_dict, # O pasándoselo directo si la librería lo acepta así
+    client_id=st.secrets["client_id"],
+    client_secret=st.secrets["client_secret"],
+    redirect_uri=st.secrets["redirect_uri"],
     cookie_name=st.secrets["cookie_name"],
     cookie_key=st.secrets["cookie_key"],
     cookie_expiry_days=30
