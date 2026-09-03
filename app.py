@@ -162,7 +162,7 @@ cursor = conn.cursor()
 # ==========================================
 ADMIN_EMAILS = ["admin@chonebachiller.edu", "Joismoza2002@gmail.com"]
 
-authenticator = Authenticate()
+authenticator = Authenticate(st.secrets)
 
 
 
