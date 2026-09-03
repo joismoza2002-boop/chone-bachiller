@@ -26,37 +26,6 @@ st.markdown("""
     header {visibility: hidden;}
     .stApp { background-color: #f8fafc; }
 
-    /* Barra lateral fija y garantizada */
-    [data-testid="stSidebar"] {
-        background-color: #0b1329 !important;
-        border-right: 1px solid #1e293b;
-        padding-top: 1rem;
-    }
-    [data-testid="stSidebar"] h3 {
-        color: #ffffff !important;
-        font-weight: 800 !important;
-    }
-    [data-testid="stSidebar"] p {
-        color: #e2e8f0 !important;
-    }
-    [data-testid="stSidebar"] .stButton>button {
-        background: rgba(255, 255, 255, 0.04);
-        color: #ffffff !important;
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        text-align: left;
-        font-weight: 600;
-        border-radius: 10px;
-        width: 100%;
-        margin-bottom: 0.4rem;
-        transition: all 0.2s ease;
-    }
-    [data-testid="stSidebar"] .stButton>button:hover {
-        background: #2563eb !important;
-        color: #ffffff !important;
-        border-color: #3b82f6;
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-    }
-
     /* Tarjetas de materias simétricas */
     .dashboard-card {
         background: #ffffff;
@@ -88,6 +57,7 @@ st.markdown("""
         border: none;
         box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
         transition: all 0.2s ease;
+        width: 100%;
     }
     .stButton>button:hover {
         background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
@@ -272,36 +242,44 @@ def render_profile_form():
             else:
                 st.error("Por favor, completa los campos obligatorios principales.")
 
-def render_sidebar():
-    with st.sidebar:
-        st.markdown("<h3 style='color: #ffffff !important; margin-bottom: 0;'>Chone Bachiller</h3>", unsafe_allow_html=True)
-        st.markdown(f"<p style='color: #e2e8f0 !important; font-size: 0.85rem; margin-top: 4px;'>{st.session_state.user_email}</p>", unsafe_allow_html=True)
-        st.markdown("<hr style='border-color: #1e293b; margin: 1rem 0;'>", unsafe_allow_html=True)
-        
-        if st.button("Simuladores Oficiales", use_container_width=True):
+def render_top_navbar():
+    """Barra de navegación superior garantizada visible tanto en PC como en dispositivos móviles"""
+    st.markdown(f"""
+        <div style="background: #0b1329; padding: 0.8rem 1.2rem; border-radius: 12px; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+            <span style="color: white; font-weight: 800; font-size: 1rem;">🎓 Chone Bachiller</span>
+            <span style="color: #cbd5e1; font-size: 0.85rem;">{st.session_state.user_email}</span>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    col_nav1, col_nav2, col_nav3, col_nav4 = st.columns(4)
+    with col_nav1:
+        if st.button("Simuladores", use_container_width=True, key="nav_sim"):
             st.session_state.current_view = "dashboard"
             st.session_state.exam_data = None
             st.rerun()
-            
-        if st.button("Mi Perfil y Datos", use_container_width=True):
+    with col_nav2:
+        if st.button("Mi Perfil", use_container_width=True, key="nav_perfil"):
             st.session_state.current_view = "profile_edit"
             st.rerun()
-            
+    with col_nav3:
         if st.session_state.user_email in ["admin@chonebachiller.edu", "admin@admin.com"]:
-            if st.button("Panel Administrativo", use_container_width=True):
+            if st.button("Panel Admin", use_container_width=True, key="nav_admin"):
                 st.session_state.current_view = "admin"
                 st.rerun()
-                
-        st.markdown("<hr style='border-color: #1e293b; margin: 1rem 0;'>", unsafe_allow_html=True)
-        if st.button("Cerrar Sesión", use_container_width=True):
+        else:
+            st.markdown("")
+    with col_nav4:
+        if st.button("Cerrar Sesión", use_container_width=True, key="nav_logout"):
             st.session_state.logged_in = False
             st.session_state.user_email = ""
             st.session_state.profile_complete = False
             st.session_state.current_view = "dashboard"
             st.session_state.exam_data = None
             st.rerun()
+    st.markdown("<hr style='border-color: #cbd5e1; margin: 1rem 0 1.5rem 0;'>", unsafe_allow_html=True)
 
 def render_profile_edit():
+    render_top_navbar()
     st.markdown("## Gestión de Perfil y Datos")
     st.markdown("Actualiza tu información personal e institucional registrada en la plataforma.")
     
@@ -340,6 +318,7 @@ def render_profile_edit():
             st.success("¡Perfil actualizado con éxito!")
 
 def render_dashboard():
+    render_top_navbar()
     st.markdown("## Panel Académico")
     st.markdown("Selecciona una materia para iniciar tu simulacro oficial (30 preguntas en 30 minutos).")
     
@@ -348,7 +327,6 @@ def render_dashboard():
         "Biología", "Química", "Física", "Matemáticas", "Lengua y Literatura", "Historia"
     ]
     
-    # Renderizado simétrico usando columnas nativas de Streamlit
     for i in range(0, len(materias), 3):
         cols = st.columns(3, gap="medium")
         for j in range(3):
@@ -382,26 +360,42 @@ def start_exam(materia):
     st.rerun()
 
 def render_exam():
+    render_top_navbar()
     exam = st.session_state.exam_data
     questions = exam["questions"]
     
-    timer_html = """
+    # Cálculo preciso del tiempo restante basado en la sesión
+    elapsed_seconds = (datetime.now() - exam["start_time"]).total_seconds()
+    remaining_seconds = max(0, 1800 - int(elapsed_seconds))
+    
+    if remaining_seconds <= 0:
+        st.warning("¡El tiempo del simulacro ha finalizado!")
+        finish_exam()
+        return
+
+    minutes = remaining_seconds // 60
+    seconds = remaining_seconds % 60
+    time_str = f"{minutes:02d}:{seconds:02d}"
+    
+    timer_html = f"""
         <div style="background: #0f172a; color: #ffffff; padding: 1rem 1.5rem; border-radius: 12px; font-weight: 700; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15); margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 1.05rem;">Simulacro Oficial</span>
-            <span id="countdown" style="font-size: 1.25rem; color: #38bdf8; font-family: monospace;">30:00</span>
+            <span style="font-size: 1.05rem;">Simulacro Oficial — {exam['materia']}</span>
+            <span id="countdown" style="font-size: 1.25rem; color: #38bdf8; font-family: monospace;">{time_str}</span>
         </div>
         <script>
             if (window.timerInterval) clearInterval(window.timerInterval);
-            let totalSeconds = 1800;
+            let totalSeconds = {remaining_seconds};
             const display = document.getElementById('countdown');
             window.timerInterval = setInterval(function () {
-                let minutes = Math.floor(totalSeconds / 60);
-                let seconds = totalSeconds % 60;
-                display.textContent = String(minutes).padStart(2, '0') + ":" + String(seconds).padStart(2, '0');
-                if (--totalSeconds < 0) {
+                if (totalSeconds <= 0) {
                     clearInterval(window.timerInterval);
                     display.textContent = "00:00";
+                    return;
                 }
+                totalSeconds--;
+                let m = Math.floor(totalSeconds / 60);
+                let s = totalSeconds % 60;
+                display.textContent = String(m).padStart(2, '0') + ":" + String(s).padStart(2, '0');
             }, 1000);
         </script>
     """
@@ -462,6 +456,7 @@ def finish_exam():
     st.rerun()
 
 def render_results():
+    render_top_navbar()
     exam = st.session_state.exam_data
     questions = exam["questions"]
     answers = exam["answers"]
@@ -491,6 +486,7 @@ def render_results():
         st.rerun()
 
 def render_admin():
+    render_top_navbar()
     st.markdown("## Panel Administrativo")
     tab1, tab2 = st.tabs(["Base de Estudiantes", "Gestión de Banco de Preguntas"])
     
@@ -525,7 +521,6 @@ if not st.session_state.logged_in:
 elif not st.session_state.profile_complete:
     render_profile_form()
 else:
-    render_sidebar()
     if st.session_state.current_view == "dashboard":
         render_dashboard()
     elif st.session_state.current_view == "profile_edit":
@@ -536,3 +531,4 @@ else:
         render_results()
     elif st.session_state.current_view == "admin":
         render_admin()
+
