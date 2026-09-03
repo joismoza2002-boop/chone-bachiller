@@ -2,7 +2,7 @@ import streamlit as st
 import sqlite3
 import pandas as pd
 import random
-from datetime import datetime, timedelta
+from datetime import datetime
 
 st.set_page_config(
     page_title="Chone Bachiller | Plataforma Educativa Oficial",
@@ -14,7 +14,6 @@ st.set_page_config(
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-    @import url('https://unpkg.com/lucide-static@latest/font/lucide.css');
 
     html, body, [class*="css"] {
         font-family: 'Plus Jakarta Sans', sans-serif;
@@ -27,9 +26,9 @@ st.markdown("""
     header {visibility: hidden;}
     .stApp { background-color: #f8fafc; }
 
-    /* Barra lateral corporativa con tipografía blanca impecable */
+    /* Barra lateral corporativa fija y siempre visible con tipografía blanca */
     [data-testid="stSidebar"] {
-        background-color: #0b1329;
+        background-color: #0b1329 !important;
         border-right: 1px solid #1e293b;
         padding-top: 1rem;
     }
@@ -42,7 +41,7 @@ st.markdown("""
     }
     [data-testid="stSidebar"] .stButton>button {
         background: rgba(255, 255, 255, 0.03);
-        color: #ffffff;
+        color: #ffffff !important;
         border: 1px solid rgba(255, 255, 255, 0.1);
         text-align: left;
         font-weight: 600;
@@ -50,24 +49,24 @@ st.markdown("""
         transition: all 0.2s ease;
     }
     [data-testid="stSidebar"] .stButton>button:hover {
-        background: #2563eb;
-        color: #ffffff;
+        background: #2563eb !important;
+        color: #ffffff !important;
         border-color: #3b82f6;
         box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
     }
 
-    /* Tarjetas de materias simétricas y limpias */
+    /* Tarjetas de materias estrictamente simétricas y uniformes */
     .dashboard-card {
         background: #ffffff;
         padding: 1.5rem;
         border-radius: 16px;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
         border: 1px solid #e2e8f0;
-        height: 190px;
+        height: 240px;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        margin-bottom: 1rem;
+        margin-bottom: 1.2rem;
         transition: all 0.25s ease;
     }
     .dashboard-card:hover {
@@ -104,20 +103,6 @@ st.markdown("""
     .stTextInput>div>div>input:focus, .stSelectbox>div>div>div:focus {
         border-color: #2563eb;
         box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
-    }
-    
-    /* Panel de temporizador */
-    .timer-box {
-        background: #0f172a;
-        color: #ffffff;
-        padding: 1rem 1.5rem;
-        border-radius: 12px;
-        font-weight: 700;
-        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
-        margin-bottom: 1.5rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -169,25 +154,38 @@ def init_db():
     return conn
 
 def seed_questions(cursor, conn):
+    banco_real = [
+        ("Razonamiento Numérico", "¿Qué número continúa en la siguiente serie: 2, 6, 12, 20, 30, ...?", "40", "42", "44", "48", "B", "La diferencia entre términos aumenta de 2 en 2: +4, +6, +8, +10, por tanto el siguiente incremento es +12 (30 + 12 = 42)."),
+        ("Razonamiento Numérico", "Si un artículo cuesta $80 y tiene un descuento del 20%, ¿cuál es su precio final?", "$60", "$64", "$68", "$70", "B", "El 20% de 80 es 16. Restando 80 - 16 se obtiene 64."),
+        ("Razonamiento Verbal", "Elija el sinónimo de la palabra: 'Benevolencia'", "Severidad", "Indulgencia", "Indiferencia", "Austeridad", "B", "La benevolencia implica comprensión y tolerancia, siendo sinónimo de indulgencia."),
+        ("Razonamiento Verbal", "Complete la analogía: Guante es a mano como zapato es a:", "Pie", "Suela", "Cordón", "Media", "A", "El guante cubre la mano de forma directa, tal como el zapato cubre el pie."),
+        ("Razonamiento Abstracto", "Identifique la figura que completa la matriz lógica basándose en la rotación horaria de 90 grados.", "Figura en cruz superior", "Figura rotada a 90° derecha", "Figura invertida verticalmente", "Figura simétrica opuesta", "B", "Al aplicar una rotación constante de 90 grados en sentido horario, el elemento adopta la posición B."),
+        ("Biología", "¿Cuál es la organela celular encargada de la respiración celular y producción de ATP?", "Ribosoma", "Mitocondria", "Aparato de Golgi", "Lisosoma", "B", "Las mitocondrias son las centrales energéticas de la célula eucariota donde se produce ATP."),
+        ("Química", "Indique el símbolo químico correspondiente al elemento Oro:", "Ag", "Au", "Pb", "Fe", "B", "El símbolo químico 'Au' proviene del latín aurum."),
+        ("Física", "Un móvil viaja a una velocidad constante de 20 m/s durante 5 segundos. ¿Qué distancia recorre?", "50 metros", "80 metros", "100 metros", "120 metros", "C", "La distancia se calcula multiplicando velocidad por tiempo: 20 m/s * 5 s = 100 metros."),
+        ("Matemáticas", "Resuelva la ecuación de primer grado: 3x - 5 = 16", "x = 5", "x = 7", "x = 9", "x = 11", "B", "Despejando x: 3x = 16 + 5 => 3x = 21 => x = 7."),
+        ("Lengua y Literatura", "Identifique la oración que presenta correcta ortografía y acentuación:", "El examen sera dificil para todos.", "Él examen será difícil para todos.", "El examen será difícil para todos.", "El examen sera dificil para todos.", "C", "Lleva tilde en 'será' por ser aguda terminada en vocal, y en 'difícil' por ser grave."),
+        ("Historia", "¿En qué año se firmó la Primera Constitución del Ecuador en la ciudad de Riobamba?", "1822", "1830", "1845", "1860", "B", "La primera Constitución del Estado del Ecuador se emitió el 23 de septiembre de 1830 en Riobamba.")
+    ]
+    
     materias = [
         "Razonamiento Numérico", "Razonamiento Verbal", "Razonamiento Abstracto",
         "Biología", "Química", "Física", "Matemáticas", "Lengua y Literatura", "Historia"
     ]
     for mat in materias:
+        match_base = [q for q in banco_real if q[0] == mat]
         for i in range(1, 31):
-            cursor.execute("""
-                INSERT INTO questions (materia, pregunta, opcion_a, opcion_b, opcion_c, opcion_d, correcta, explicacion)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                mat,
-                f"Reactivo oficial # {i} de aptitud y conocimientos académicos evaluados en la prueba de admisión para {mat}:",
-                "Opción distractor analítico A",
-                "Opción correcta validada bajo normativa técnica",
-                "Opción distractor analítico C",
-                "Opción distractor analítico D",
-                "B",
-                f"La respuesta correcta es la B debido al fundamento analítico aplicable en {mat}."
-            ))
+            if match_base:
+                base = match_base[(i - 1) % len(match_base)]
+                cursor.execute("""
+                    INSERT INTO questions (materia, pregunta, opcion_a, opcion_b, opcion_c, opcion_d, correcta, explicacion)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """, (mat, f"Reactivo oficial #{i} - {base[1]}", base[2], base[3], base[4], base[5], base[6], base[7]))
+            else:
+                cursor.execute("""
+                    INSERT INTO questions (materia, pregunta, opcion_a, opcion_b, opcion_c, opcion_d, correcta, explicacion)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """, (mat, f"Reactivo oficial de evaluación # {i} para el dominio de {mat}.", "Opción analítica A", "Opción correcta validada B", "Opción distractor C", "Opción distractor D", "B", f"Fundamento teórico correcto validado para {mat}."))
     conn.commit()
 
 conn = init_db()
@@ -201,16 +199,13 @@ if "exam_data" not in st.session_state: st.session_state.exam_data = None
 
 def render_auth():
     col_brand, col_login = st.columns([1.1, 0.9], gap="large")
-    
     with col_brand:
         st.markdown("""
             <div style="background: linear-gradient(135deg, #0b1329 0%, #1e3a8a 100%); color: white; padding: 3.5rem 3rem; border-radius: 20px; min-height: 82vh; display: flex; flex-direction: column; justify-content: space-between;">
                 <div>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="background: rgba(255,255,255,0.15); padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #ffffff;">
-                            Cantón Chone · Manabí
-                        </span>
-                    </div>
+                    <span style="background: rgba(255,255,255,0.15); padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #ffffff;">
+                        Cantón Chone · Manabí
+                    </span>
                     <h1 style="font-size: 2.6rem; font-weight: 800; line-height: 1.2; margin-top: 1.5rem; margin-bottom: 1rem; color: white;">
                         Prepárate para tu examen de admisión universitaria
                     </h1>
@@ -282,8 +277,8 @@ def render_profile_form():
 
 def render_sidebar():
     with st.sidebar:
-        st.markdown("<h3 style='color: #ffffff; margin-bottom: 0;'>Chone Bachiller</h3>", unsafe_allow_html=True)
-        st.markdown(f"<p style='color: #e2e8f0; font-size: 0.85rem; margin-top: 4px;'>{st.session_state.user_email}</p>", unsafe_allow_html=True)
+        st.markdown("<h3 style='color: #ffffff !important; margin-bottom: 0;'>Chone Bachiller</h3>", unsafe_allow_html=True)
+        st.markdown(f"<p style='color: #e2e8f0 !important; font-size: 0.85rem; margin-top: 4px;'>{st.session_state.user_email}</p>", unsafe_allow_html=True)
         st.markdown("<hr style='border-color: #1e293b; margin: 1rem 0;'>", unsafe_allow_html=True)
         
         if st.button("Simuladores Oficiales", use_container_width=True):
@@ -332,10 +327,8 @@ def render_profile_edit():
             cond_list = ["Bachiller Graduado", "Estudiante en curso secundario"]
             idx_cond = cond_list.index(condicion) if condicion in cond_list else 0
             new_condicion = st.selectbox("Condición Actual:", cond_list, index=idx_cond)
-            
             new_anio = st.text_input("Año de Graduación:", value=anio_graduacion)
             new_colegio = st.text_input("Unidad Educativa:", value=unidad_educativa)
-            
             avatars = ["Estudiante Destacado", "Aspirante Pro", "Becario Tech", "Investigador"]
             idx_av = avatars.index(avatar) if avatar in avatars else 0
             new_avatar = st.selectbox("Perfil Académico:", avatars, index=idx_av)
@@ -358,7 +351,6 @@ def render_dashboard():
         "Biología", "Química", "Física", "Matemáticas", "Lengua y Literatura", "Historia"
     ]
     
-    # Renderizado limpio utilizando columnas nativas de Streamlit para evitar código plano en pantalla
     for i in range(0, len(materias), 3):
         cols = st.columns(3, gap="medium")
         for j in range(3):
@@ -369,7 +361,7 @@ def render_dashboard():
                         <div class='dashboard-card'>
                             <div>
                                 <h3 style='font-size: 1.1rem; font-weight: 700; color: #1e3a8a; margin-bottom: 8px;'>{materia}</h3>
-                                <p style='color: #64748b; font-size: 0.87rem; line-height: 1.4; margin-bottom: 0;'>Simulador estandarizado con 30 reactivos y retroalimentación teórica completa.</p>
+                                <p style='color: #64748b; font-size: 0.87rem; line-height: 1.4; margin-bottom: 0;'>Simulador oficial con 30 reactivos estandarizados y retroalimentación teórica completa.</p>
                             </div>
                         </div>
                     """, unsafe_allow_html=True)
@@ -395,22 +387,28 @@ def render_exam():
     exam = st.session_state.exam_data
     questions = exam["questions"]
     
-    elapsed = datetime.now() - exam["start_time"]
-    remaining_seconds = max(0, 1800 - int(elapsed.total_seconds()))
-    
-    if remaining_seconds <= 0:
-        st.warning("El tiempo del simulacro ha expirado. Enviando respuestas registradas automáticamente.")
-        finish_exam(auto_submitted=True)
-        return
-
-    mins, secs = divmod(remaining_seconds, 60)
-    
-    st.markdown(f"""
-        <div class="timer-box">
-            <span>Simulacro Oficial: {exam["materia"]}</span>
-            <span style="font-size: 1.2rem; color: #38bdf8;">Tiempo Restante: {mins:02d}:{secs:02d}</span>
+    # Cronómetro fluido en JS en el navegador
+    timer_html = """
+        <div style="background: #0f172a; color: #ffffff; padding: 1rem 1.5rem; border-radius: 12px; font-weight: 700; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15); margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 1.05rem;">Simulacro Oficial</span>
+            <span id="countdown" style="font-size: 1.25rem; color: #38bdf8; font-family: monospace;">30:00</span>
         </div>
-    """, unsafe_allow_html=True)
+        <script>
+            if (window.timerInterval) clearInterval(window.timerInterval);
+            let totalSeconds = 1800;
+            const display = document.getElementById('countdown');
+            window.timerInterval = setInterval(function () {
+                let minutes = Math.floor(totalSeconds / 60);
+                let seconds = totalSeconds % 60;
+                display.textContent = String(minutes).padStart(2, '0') + ":" + String(seconds).padStart(2, '0');
+                if (--totalSeconds < 0) {
+                    clearInterval(window.timerInterval);
+                    display.textContent = "00:00";
+                }
+            }, 1000);
+        </script>
+    """
+    st.markdown(timer_html, unsafe_allow_html=True)
     
     idx = exam["current_idx"]
     q = questions[idx]
@@ -420,7 +418,7 @@ def render_exam():
     st.markdown(f"**Reactivo {idx + 1} de {len(questions)}**")
     
     st.markdown(f"""
-        <div class="dashboard-card" style="height: auto; min-height: 120px; margin-top: 0.8rem; margin-bottom: 1.2rem;">
+        <div class="dashboard-card" style="height: auto; min-height: 130px; margin-top: 0.8rem; margin-bottom: 1.2rem;">
             <h3 style="font-size: 1.05rem; font-weight: 700; color: #0f172a; margin-bottom: 0;">{q_text}</h3>
         </div>
     """, unsafe_allow_html=True)
@@ -446,11 +444,11 @@ def render_exam():
         total_q = len(questions)
         if answered_count == total_q:
             if st.button("Finalizar y Enviar", type="primary"):
-                finish_exam(auto_submitted=False)
+                finish_exam()
         else:
             st.markdown(f"<p style='color: #64748b; font-size: 0.8rem; text-align: center; margin-top: 10px;'>Faltan {total_q - answered_count} por responder</p>", unsafe_allow_html=True)
 
-def finish_exam(auto_submitted=False):
+def finish_exam():
     exam = st.session_state.exam_data
     questions = exam["questions"]
     answers = exam["answers"]
@@ -525,6 +523,7 @@ def render_admin():
         st.session_state.current_view = "dashboard"
         st.rerun()
 
+# Control de flujo principal garantizando que la barra lateral aparezca siempre tras la autenticación
 if not st.session_state.logged_in:
     render_auth()
 elif not st.session_state.profile_complete:
@@ -541,3 +540,4 @@ else:
         render_results()
     elif st.session_state.current_view == "admin":
         render_admin()
+
