@@ -3,7 +3,6 @@ import sqlite3
 import pandas as pd
 import random
 from datetime import datetime
-from streamlit_google_auth import Authenticate
 
 st.set_page_config(
     page_title="Chone Bachiller | Plataforma Educativa Oficial",
@@ -157,13 +156,8 @@ def seed_questions(cursor, conn):
 conn = init_db()
 cursor = conn.cursor()
 
-# ==========================================
-# CONFIGURACIÓN DE GOOGLE OAUTH Y ADMINS
-# ==========================================
-ADMIN_EMAILS = ["admin@chonebachiller.edu", "Joismoza2002@gmail.com"]
-
-
-
+if "logged_in" not in st.session_state: st.session_state.logged_in = False
+if "user_email" not in st.session_state: st.session_state.user_email = ""
 if "profile_complete" not in st.session_state: st.session_state.profile_complete = False
 if "current_view" not in st.session_state: st.session_state.current_view = "dashboard"
 if "exam_data" not in st.session_state: st.session_state.exam_data = None
@@ -193,10 +187,27 @@ def render_auth():
     with col_login:
         st.markdown("<div style='height: 2.5rem;'></div>", unsafe_allow_html=True)
         st.markdown("## Inicia sesión")
-        st.markdown("Usa tu cuenta institucional o personal de Google para ingresar al sistema.")
+        st.markdown("Usa tu correo personal para ingresar al sistema.")
         
-        # Botón oficial de Google OAuth
-        authenticator.login()
+        with st.form("login_form"):
+            email_input = st.text_input("Correo electrónico personal", placeholder="tucorreo@gmail.com")
+            submitted = st.form_submit_button("Continuar")
+            if submitted:
+                if email_input and "@" in email_input and "." in email_input:
+                    st.session_state.user_email = email_input.strip().lower()
+                    st.session_state.logged_in = True
+                    cursor.execute("SELECT nombres FROM users WHERE email = ?", (st.session_state.user_email,))
+                    row = cursor.fetchone()
+                    st.session_state.profile_complete = True if row and row[0] else False
+                    st.rerun()
+                else:
+                    st.error("Introduce un correo electrónico válido.")
+
+        if st.button("Acceso rápido Coordinación (Admin)"):
+            st.session_state.user_email = "admin@chonebachiller.edu"
+            st.session_state.logged_in = True
+            st.session_state.profile_complete = True
+            st.rerun()
 
 def render_profile_form():
     st.markdown("## Registro de Perfil Académico")
@@ -248,7 +259,7 @@ def render_top_navbar():
             st.session_state.current_view = "profile_edit"
             st.rerun()
     with col_nav3:
-        if st.session_state.user_email in ADMIN_EMAILS:
+        if st.session_state.user_email in ["admin@chonebachiller.edu", "admin@admin.com"]:
             if st.button("Panel Admin", use_container_width=True, key="nav_admin"):
                 st.session_state.current_view = "admin"
                 st.rerun()
@@ -256,7 +267,11 @@ def render_top_navbar():
             st.markdown("")
     with col_nav4:
         if st.button("Cerrar Sesión", use_container_width=True, key="nav_logout"):
-            authenticator.logout()
+            st.session_state.logged_in = False
+            st.session_state.user_email = ""
+            st.session_state.profile_complete = False
+            st.session_state.current_view = "dashboard"
+            st.session_state.exam_data = None
             st.rerun()
     st.markdown("<hr style='border-color: #cbd5e1; margin: 1rem 0 1.5rem 0;'>", unsafe_allow_html=True)
 
@@ -477,6 +492,7 @@ def render_admin():
     st.markdown("## ⚙️ Panel de Administración y Control")
     st.markdown("Supervisa el rendimiento general, gestiona el banco de reactivos y revisa a los aspirantes registrados.")
 
+    # Métricas generales del sistema
     cursor.execute("SELECT COUNT(*) FROM users")
     total_users = cursor.fetchone()[0]
     cursor.execute("SELECT COUNT(*) FROM results")
@@ -592,38 +608,18 @@ def render_admin():
         st.session_state.current_view = "dashboard"
         st.rerun()
 
-# ==========================================
-# GESTIÓN DE ESTADOS DE SESIÓN (GOOGLE AUTH)
-# ==========================================
-if not st.session_state.get("connected", False):
+if not st.session_state.logged_in:
     render_auth()
+elif not st.session_state.profile_complete:
+    render_profile_form()
 else:
-    # Extraer el email autenticado por Google
-    user_info = st.session_state.get("user_info", {})
-    st.session_state.user_email = user_info.get("email", "").lower()
-    
-    # Verificar si el usuario ya tiene perfil registrado en SQLite
-    cursor.execute("SELECT nombres FROM users WHERE email = ?", (st.session_state.user_email,))
-    row = cursor.fetchone()
-    st.session_state.profile_complete = True if row and row[0] else False
-
-    if not st.session_state.profile_complete:
-        render_profile_form()
-    else:
-        if st.session_state.current_view == "dashboard":
-            render_dashboard()
-        elif st.session_state.current_view == "profile_edit":
-            render_profile_edit()
-        elif st.session_state.current_view == "exam":
-            render_exam()
-        elif st.session_state.current_view == "results":
-            render_results()
-        elif st.session_state.current_view == "admin":
-            # Validación RBAC estricta para administradores
-            if st.session_state.user_email in ADMIN_EMAILS:
-                render_admin()
-            else:
-                st.error("No tienes permisos de administrador para acceder a esta sección.")
-                if st.button("Volver al Dashboard"):
-                    st.session_state.current_view = "dashboard"
-                    st.rerun()
+    if st.session_state.current_view == "dashboard":
+        render_dashboard()
+    elif st.session_state.current_view == "profile_edit":
+        render_profile_edit()
+    elif st.session_state.current_view == "exam":
+        render_exam()
+    elif st.session_state.current_view == "results":
+        render_results()
+    elif st.session_state.current_view == "admin":
+        render_admin()
